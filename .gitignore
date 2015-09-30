@@ -3,3 +3,5 @@ GPATH
 GRTAGS
 GTAGS
 *.out
+__pycache__
+*.pyc
