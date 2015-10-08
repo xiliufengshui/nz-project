@@ -7,10 +7,11 @@
 __author__ = 'naturezhang'
 
 
-import NZcommon
-import sys
+# import NZcommon
+# import sys
 
-sys.path.append(str(NZcommon.get_cur_file_dir()) + '/../external-packages')
+# print(str(NZcommon.get_cur_file_dir()))
+# sys.path.append(str(NZcommon.get_cur_file_dir()) + '/../external-packages')
 
 import pymysql.cursors
 
@@ -30,7 +31,7 @@ def execute_sql(strSql, strDB, strHost, strUser, strPassword):
             print(result)
     finally:
         connection.close()
-
     
 if __name__ == "__main__":
     pass
+
