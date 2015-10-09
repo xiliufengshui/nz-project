@@ -7,7 +7,7 @@
 __author__ = 'naturezhang'
 
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def get_cur_time(strTimeFormat="%Y%m%d"):
@@ -23,6 +23,12 @@ def is_valid_date(strDate, strDateFormat="%Y%m%d"):
         return True
     except:
         return False
+
+
+def add_one_day(strSrcDate, strDateFormat="%Y%m%d"):
+    dateTmp = datetime.strptime(strSrcDate, strDateFormat)
+    dateTmp = dateTmp + timedelta(days=1)
+    return dateTmp.strftime("%Y%m%d")
 
 
 if __name__ == "__main__":

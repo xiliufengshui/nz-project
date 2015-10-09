@@ -27,10 +27,15 @@ def execute_sql(strSql, strDB, strHost, strUser, strPassword):
         with connection.cursor() as cursor:
             # Read a single record
             cursor.execute(strSql)
-            result = cursor.fetchone()
-            print(result)
+            # 查询一条记录
+            # result = cursor.fetchone()
+            # 查询多条记录
+            # result = cursor.fetchall()
+            # print(result)
+            return cursor.fetchall()
     finally:
         connection.close()
+        
     
 if __name__ == "__main__":
     pass
