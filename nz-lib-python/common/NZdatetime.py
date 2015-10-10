@@ -26,9 +26,22 @@ def is_valid_date(strDate, strDateFormat="%Y%m%d"):
 
 
 def add_one_day(strSrcDate, strDateFormat="%Y%m%d"):
+    'example: add_one_day("2015-09-09", "%Y-%m-%d")'
     dateTmp = datetime.strptime(strSrcDate, strDateFormat)
     dateTmp = dateTmp + timedelta(days=1)
     return dateTmp.strftime("%Y%m%d")
+
+
+def strdate_to_timestamp(strSrcDate, strDateFormat="%Y%m%d"):
+    'example: date_to_unixtime("2015-09-09", "%Y-%m-%d")'
+    dateTmp = datetime.strptime(strSrcDate, strDateFormat)
+    return dateTmp.timestamp()
+
+
+def timestamp_to_strdate(fTimestamp, strDateFormat):
+    'example: timestamp_to_strdate()'
+    datetimeTmp = datetime.fromtimestamp(fTimestamp)
+    return datetimeTmp.strftime(strDateFormat)
 
 
 if __name__ == "__main__":
