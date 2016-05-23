@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2015/11/19 20:27:47>
+// LastChangeTime : Time-stamp: <naturezhang 2016/05/24 00:52:59>
 // Name           : NZconfig.h
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -48,6 +48,10 @@ public:
        -3   没有找到对应key值
      */
     int get_config_value(string strKey, string &strValue); /* 根据配置名 返回 配置项 */
+
+    string get_config_value(string strKey);
+
+    
     map<string, string> m_mapConfig;
 };
 

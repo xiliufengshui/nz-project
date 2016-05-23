@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2015/11/24 19:31:35>
+// LastChangeTime : Time-stamp: <naturezhang 2016/05/24 01:03:44>
 // Name           : NZconfig.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -104,4 +104,18 @@ int NZconfig::get_config_value(string strKey, string &strValue)
         return -3;
     }
     return 0;
+}
+
+
+string NZconfig::get_config_value(string strKey)
+{
+    string strRst = "";
+    if(m_mapConfig.empty() || strKey.empty()) return strRst;
+    map<string, string>::iterator it;
+    it = m_mapConfig.find(strKey);
+    if(it != m_mapConfig.end())
+    {
+        strRst = it->second;
+    }
+    return strRst;
 }
