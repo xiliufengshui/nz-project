@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <Administrator 2016/05/19 20:33:21>
+// LastChangeTime : Time-stamp: <naturezhang 2016/05/25 00:32:44>
 // Name           : NZshareMemory.h
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -19,30 +19,24 @@
 #include <sys/shm.h>
 #include <stdint.h>
 
+template <class T>
 class CBlackPhoneShm
 {
 public:
     CBlackPhoneShm();
     virtual ~CBlackPhoneShm();
     inline int show_page_size(); /* 显示系统分页大小 */
-    int create_hash_table();
+    int create_hash_table(uint64_t ddwShmKey, uint32_t dwBucketSize, uint32_t dwBucketCnt);
     /* return 输入值有误：-1 正常：0 hash冲突：-2 */
     int insert_hash_table(uint64_t dwPhone);
-    /* 判断是否是black phone  return no:-1 yes:>=0 other:-1*/
-    int is_black_phone(uint64_t dwPhone);
-    /* 清理数据 引用计减一 返回正常：0*/
-    int clear_old_data(uint64_t dwPhone);
     int get_hash_table();
-
-    /* 获取输入手机号的共享内存信息(引用次数) */
-    int get_phone_info(uint64_t dwPhone);
-
-    int m_iShmKey;              /* 共享内存key */
+    
+    uint64_t m_ddwShmKey;              /* 共享内存key */
+    uint32_t m_dwBucketSize;           /* 共享内存单个桶的元素个数 */
+    uint32_t m_dwBucketCnt;            /* 共享内存桶的个数*/
+    T *m_pShm;
     int m_iShmId;               /* 共享内存shmid */
-    int m_iSize;                /* 共享内存大小，元素个数*/
-    stElement *m_pShm;
-    int m_aHashPailSize[10];     /* 定义hash 10个桶 元素值为每个桶对应的大小 */
-
+    
 };
 
 

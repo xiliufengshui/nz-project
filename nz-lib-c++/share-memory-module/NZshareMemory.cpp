@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <Administrator 2016/05/20 16:24:22>
+// LastChangeTime : Time-stamp: <naturezhang 2016/05/25 00:54:17>
 // Name           : NZshareMemory.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -13,41 +13,31 @@
 #include "NZshareMemory.h"
 #include <string.h>
 #include <stdlib.h>
+#include "NZgetPrime.h"
 
-CBlackPhoneShm::CBlackPhoneShm()
+template<class T>
+CBlackPhoneShm<T>::CBlackPhoneShm()
 {
-    m_iShmId = 0;
-    m_aHashPailSize[0] = 14999981;
-    m_aHashPailSize[1] = 14999977;
-    m_aHashPailSize[2] = 14999969;
-    m_aHashPailSize[3] = 14999953;
-    m_aHashPailSize[4] = 14999947;
-    m_aHashPailSize[5] = 14999921;
-    m_aHashPailSize[6] = 14999917;
-    m_aHashPailSize[7] = 14999903;
-    m_aHashPailSize[8] = 14999867;
-    m_aHashPailSize[9] = 14999861;
-
-    m_iSize = 0;
-    for (int i=0; i<10; i++)
-    {
-        m_iSize += m_aHashPailSize[i];
-    }
-
+    m_ddwShmKey = 0;
+    m_dwBucketSize = 0; 
+    m_dwBucketCnt = 0;
     m_pShm = NULL;
 }
 
-CBlackPhoneShm::~CBlackPhoneShm()
+template<class T>
+CBlackPhoneShm<T>::~CBlackPhoneShm()
 {
 }
 
-inline int CBlackPhoneShm::show_page_size()
+template<class T>
+inline int CBlackPhoneShm<T>::show_page_size()
 {
     std::cout << getpagesize() << std::endl;
     return 0;
 }
 
-int CBlackPhoneShm::create_hash_table()
+template<class T>
+int CBlackPhoneShm<T>::create_hash_table(uint64_t ddwShmKey, uint32_t dwBucketSize, uint32_t dwBucketCnt)
 {
     if(m_iSize == 0)
     {
@@ -70,24 +60,6 @@ int CBlackPhoneShm::create_hash_table()
     return 0;
 }
 
-int CBlackPhoneShm::is_black_phone(uint64_t dwPhone)
-{
-    if(dwPhone < 10000 || m_pShm == NULL)
-    {
-        return -1;
-    }
-    int iIndexOffset = 0;
-    for (int i=0; i<10; i++)
-    {
-        uint64_t iElementIdx = dwPhone % m_aHashPailSize[i] + iIndexOffset;
-        if(m_pShm[iElementIdx].iTimes > 0 && m_pShm[iElementIdx].dwPhone == dwPhone)
-        {
-            return iElementIdx;
-        }
-        iIndexOffset += m_aHashPailSize[i];
-    }
-    return -1;
-}
 
 
 int CBlackPhoneShm::insert_hash_table(uint64_t dwPhone)
