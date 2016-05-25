@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2016/05/25 00:54:17>
+// LastChangeTime : Time-stamp: <Administrator 2016/05/25 19:34:13>
 // Name           : NZshareMemory.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -16,53 +16,79 @@
 #include "NZgetPrime.h"
 
 template<class T>
-CBlackPhoneShm<T>::CBlackPhoneShm()
+NZshareMemory<T>::NZshareMemory()
 {
     m_ddwShmKey = 0;
     m_dwBucketSize = 0; 
     m_dwBucketCnt = 0;
+    m_dwRealBucketCnt = 0;
+    m_ddwShmElementCnt = 0;
+    m_iShmId = 0;
     m_pShm = NULL;
 }
 
 template<class T>
-CBlackPhoneShm<T>::~CBlackPhoneShm()
+NZshareMemory<T>::~NZshareMemory()
 {
 }
 
 template<class T>
-inline int CBlackPhoneShm<T>::show_page_size()
+inline int NZshareMemory<T>::show_page_size()
 {
     std::cout << getpagesize() << std::endl;
     return 0;
 }
 
 template<class T>
-int CBlackPhoneShm<T>::create_hash_table(uint64_t ddwShmKey, uint32_t dwBucketSize, uint32_t dwBucketCnt)
+int NZshareMemory<T>::create_hash_table(uint32_t dwShmKey, uint32_t dwBucketSize, uint32_t dwBucketCnt)
 {
-    if(m_iSize == 0)
+    if(dwBucketSize == 0 || dwBucketCnt == 0 || ddwShmKey == 0 || dwBucketCnt > MAXBUCKETCNT) return -1;
+    int iRst = get_Prime(dwBucketSize, m_adwBucketInfo, dwBucketCnt);
+    if(iRst < 0) return -2;
+    m_ddwShmKey = ddwShmKey;
+    m_dwBucketSize = dwBucketSize;
+    m_dwBucketCnt = dwBucketCnt;
+    m_dwRealBucketCnt = iRst;
+    for(int i=0; i<=m_dwRealBucketCnt; i++)
     {
-        return -1;
+        m_ddwShmElementCnt += m_adwBucketInfo[i];
     }
-    int iShmId = shmget((key_t)SHM_ID, sizeof(stElement)*m_iSize, 0666|IPC_CREAT|IPC_EXCL);
-    if(iShmId == -1)
-    {
-        return -1;
-    }
+    int iShmId = shmget((key_t)dwShmKey, sizeof(T)*m_ddwShmElementCnt, 0666|IPC_CREAT|IPC_EXCL);
+    if(iShmId == -1) return -1
     m_iShmId = iShmId;
     void * tmpMem;
     tmpMem = shmat(m_iShmId, (const void*)0, 0);
-    if(*(int*)tmpMem == -1)
-    {
-        return -1;
-    }
-    m_pShm = (stElement *)tmpMem;
-    memset(m_pShm, 0 , sizeof(stElement)*m_iSize);
+    if(*(int*)tmpMem == -1) return -1;
+    m_pShm = (T *)tmpMem;
+    memset(m_pShm, 0 , sizeof(T)*m_ddwShmElementCnt);
     return 0;
 }
 
+template<class T>
+int NZshareMemory<T>::get_hash_table(uint32_t dwShmKey, uint32_t dwBucketSize, uint32_t dwBucketCnt)
+{
+    if(dwBucketSize == 0 || dwBucketCnt == 0 || ddwShmKey == 0 || dwBucketCnt > MAXBUCKETCNT) return -1;
+    int iRst = get_Prime(dwBucketSize, m_adwBucketInfo, dwBucketCnt);
+    if(iRst < 0) return -2;
+    m_ddwShmKey = ddwShmKey;
+    m_dwBucketSize = dwBucketSize;
+    m_dwBucketCnt = dwBucketCnt;
+    m_dwRealBucketCnt = iRst;
+    for(int i=0; i<=m_dwRealBucketCnt; i++)
+    {
+        m_ddwShmElementCnt += m_adwBucketInfo[i];
+    }
+    int iShmId = shmget((key_t)dwShmKey, 0, 0);
+    if(iShmId == -1) return -1;
+    void *tmpMem = shmat(iShmId, (const void*)0, 0);
+    if(*(int*)tmpMem == -1) return -1;
+    m_iShmId = iShmId;
+    m_pShm = (T *)tmpMem;
+    return 0;
+}
 
-
-int CBlackPhoneShm::insert_hash_table(uint64_t dwPhone)
+template<class T>
+int NZshareMemory<T>::insert_hash_table(uint64_t dwPhone)
 {
     if(dwPhone < 10000 || m_pShm == NULL)
     {
@@ -90,7 +116,7 @@ int CBlackPhoneShm::insert_hash_table(uint64_t dwPhone)
     return -2;
 }
 
-int CBlackPhoneShm::clear_old_data(uint64_t dwPhone)
+int NZshareMemory::clear_old_data(uint64_t dwPhone)
 {
     if(dwPhone < 10000 || m_pShm == NULL)
     {
@@ -105,24 +131,8 @@ int CBlackPhoneShm::clear_old_data(uint64_t dwPhone)
     return -2;
 }
 
-int CBlackPhoneShm::get_hash_table()
-{
-    int iShmId = shmget((key_t)SHM_ID, 0, 0);
-    if(iShmId == -1)
-    {
-        return -1;
-    }
-    void *tmpMem = shmat(iShmId, (const void*)0, 0);
-    if(*(int*)tmpMem == -1)
-    {
-        return -1;
-    }
-    m_iShmId = iShmId;
-    m_pShm = (stElement *)tmpMem;
-    return 0;
-}
 
-int CBlackPhoneShm::get_phone_info(uint64_t dwPhone)
+int NZshareMemory::get_phone_info(uint64_t dwPhone)
 {
     if(dwPhone < 10000 || m_pShm == NULL)
     {
@@ -140,17 +150,17 @@ int CBlackPhoneShm::get_phone_info(uint64_t dwPhone)
 // int main(int argc, char *argv[])
 // {
 //     std::cout << "nihaoma" << std::endl;
-//     CBlackPhoneShm CBlackPhoneShmIns;
-//     if(CBlackPhoneShmIns.get_hash_table() < 0)
+//     NZshareMemory NZshareMemoryIns;
+//     if(NZshareMemoryIns.get_hash_table() < 0)
 //     {
-//         if(CBlackPhoneShmIns.create_hash_table() < 0)
+//         if(NZshareMemoryIns.create_hash_table() < 0)
 //         {
 //             std::cout << "error: create hash table failed!" << std::endl;
 //             return -1;
 //         }
 //     }
-//     CBlackPhoneShmIns.insert_hash_table(18033442257);
-//     std::cout << CBlackPhoneShmIns.is_black_phone(18033442257) << std::endl;
-//     std::cout << CBlackPhoneShmIns.is_black_phone(15160026760) << std::endl;
+//     NZshareMemoryIns.insert_hash_table(18033442257);
+//     std::cout << NZshareMemoryIns.is_black_phone(18033442257) << std::endl;
+//     std::cout << NZshareMemoryIns.is_black_phone(15160026760) << std::endl;
 //     return 0;
 // }
