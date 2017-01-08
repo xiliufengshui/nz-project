@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/01/04 21:11:48>
+// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 00:19:34>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -14,14 +14,6 @@
 
 CTextProcessor::CTextProcessor()
 {
-    m_mapReplace.clear();
-    m_mapCommonChineseCharacter.clear();
-    m_mapSubCommonChineseCharacter.clear();
-    m_mapNumber.clear();
-    m_mapAlphabet.clear();
-    m_mapEmoji.clear();
-    m_mapSymbol.clear();
-    
     m_bIsInitReplaceDate = false;
     m_bIsInitCommonChineseCharacter = false;
     m_bIsInitSubCommonChineseCharacter = false;
@@ -29,20 +21,28 @@ CTextProcessor::CTextProcessor()
     m_bIsInitAlphabet = false;
     m_bIsInitEmoji = false;
     m_bIsInitSymbol = false;
+    m_bIsInitSvmModel = false;
     
-    snprintf(m_acReplaceDataFile, BUFFER_LEN, "%s", "test_replace");
+    snprintf(m_acReplaceDataFile, BUFFER_LEN, "%s", "replace_data_utf8.txt");
     snprintf(m_acCommonChineseCharacterDataFile, BUFFER_LEN, "%s", "common_chinese_character_utf8.txt");
     snprintf(m_acSubCommonChineseCharacterDataFile, BUFFER_LEN, "%s", "sub_common_chinese_character_utf8.txt");
     snprintf(m_acNumberDataFile, BUFFER_LEN, "%s", "number_utf8.txt");
     snprintf(m_acAlphabetDataFile, BUFFER_LEN, "%s", "alphabet_utf8.txt");
     snprintf(m_acEmojiDataFile, BUFFER_LEN, "%s", "emoji_utf8.txt");
     snprintf(m_acSymbolDataFile, BUFFER_LEN, "%s", "symbol_utf8.txt");
+    snprintf(m_acSvmModelDataFile, BUFFER_LEN, "%s", "rst_feature_train.txt.model");
+
+    m_pSvmModel = NULL;
     
-    setlocale(LC_ALL, "");
+    setlocale(LC_ALL, "en_US.UTF-8");
 }
 
 CTextProcessor::~CTextProcessor()
 {
+    if (m_pSvmModel != NULL)
+    {
+        svm_free_and_destroy_model(&m_pSvmModel);
+    }
 }
 
 
@@ -57,6 +57,7 @@ int CTextProcessor::init_replace_data(char *pcDataFileName)
     string strLine;
     wchar_t wcaTmp[BUFFER_LEN];
     int iRows = 0;
+    m_mapReplace.clear();
     while (getline(iReadFile, strLine))
     {
         mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
@@ -66,7 +67,7 @@ int CTextProcessor::init_replace_data(char *pcDataFileName)
         }
         else
         {
-            printf("warning: read line wrong [ %s ]", strLine.c_str());
+            printf("warning: read line wrong [ %s ]\n", strLine.c_str());
         }
         iRows ++;
         if (iRows > 100000)
@@ -108,6 +109,40 @@ int CTextProcessor::replace_word(wchar_t *pwcOutput, wchar_t *pwcInput)
     return 0;
 }
 
+int CTextProcessor::replace_word(char *pcOutput, char *pcInput)
+{
+    if (pcOutput == NULL || pcInput == NULL) return -1;
+    int iRst = init_replace_data(m_acReplaceDataFile);
+    if (iRst != 0)
+    {
+        printf("error: init replace data failed!\n");
+        return -1;
+    }
+    if (strlen(pcInput) > BUFFER_LEN)
+    {
+        printf("error: input string too long!\n");
+        return -1;
+    }
+    wchar_t wcaInput[BUFFER_LEN];
+    wchar_t wcaOutput[BUFFER_LEN];
+    mbstowcs(wcaInput, pcInput, BUFFER_LEN);
+    int iLen = (int)wcslen(wcaInput);
+    int i = 0;
+    for (i=0; i<iLen; i++)
+    {
+        if (0 == m_mapReplace[wcaInput[i]])
+        {
+            wcaOutput[i] = wcaInput[i];
+        }
+        else
+        {
+            wcaOutput[i] = m_mapReplace[wcaInput[i]];
+        }
+    }
+    wcaOutput[i] = 0;
+    wcstombs(pcOutput, wcaOutput, BUFFER_LEN);
+    return 0;
+}
 
 int CTextProcessor::single_word_stat(char *pcFileName)
 {
@@ -117,10 +152,7 @@ int CTextProcessor::single_word_stat(char *pcFileName)
     mapStat.clear();
     ifstream iReadFile;
     iReadFile.open(pcFileName, ios_base::in);
-    if (iReadFile.fail()) 
-    {
-        return -1;
-    }
+    if (iReadFile.fail()) return -1;
     string strLine;
     wchar_t wcaTmp[1024] = {0};
     long iTotalCnt = 0;
@@ -158,10 +190,7 @@ int CTextProcessor::before_word_stat(char *pcFileName)
     mapStat.clear();
     ifstream iReadFile;
     iReadFile.open(pcFileName, ios_base::in);
-    if (iReadFile.fail())
-    {
-        return -1;
-    }
+    if (iReadFile.fail()) return -1;
     string strLine;
     wchar_t wcaTmp[1024] = {0};
     long iTotalWord = 0;
@@ -206,10 +235,7 @@ int CTextProcessor::next_word_stat(char *pcFileName)
     mapStat.clear();
     ifstream iReadFile;
     iReadFile.open(pcFileName, ios_base::in);
-    if (iReadFile.fail())
-    {
-        return -1;
-    }
+    if (iReadFile.fail()) return -1;
     string strLine;
     wchar_t wcaTmp[1024] = {0};
     long iTotalWord = 0;
@@ -258,10 +284,7 @@ int CTextProcessor::get_all_stat(char *pcFileName)
     mapStatNext.clear();
     ifstream iReadFile;
     iReadFile.open(pcFileName, ios_base::in);
-    if (iReadFile.fail())
-    {
-        return -1;
-    }
+    if (iReadFile.fail()) return -1;
     string strLine;
     wchar_t wcaTmp[1000] = {0};
     long iTotalWord = 0;
@@ -358,6 +381,11 @@ int CTextProcessor::stat_msg_length(char *pcFileName)
     {
         mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
         iLen = (int)wcslen(wcaTmp);
+        if (iLen >= BUFFER_LEN)
+        {
+            printf("warning: msg is too long ,lost info\n");
+            continue;
+        }
         aiStat[iLen] ++;
     }
     iReadFile.close();
@@ -411,178 +439,34 @@ int CTextProcessor::get_sample_feature(char *pcFileName)
     if (iReadFile.fail()) return -1;
     
     string strLine;
-    wchar_t wcaTmp[BUFFER_LEN];
-    
-    int iMsgLen = 0;
-    int iMsgUniqCnt = 0;
-    int iCommonCnt = 0;
-    int iCommonUniqCnt = 0;
-    int iSubCommonCnt = 0;
-    int iSubCommonUniqCnt = 0;
-    int iNumberCnt = 0;
-    int iNumberUniqCnt = 0;
-    int iAlphabetCnt = 0;
-    int iAlphabetUniqCnt = 0;
-    int iEmojiCnt = 0;
-    int iEmojiUniqCnt = 0;
-    int iSymbolCnt = 0;
-    int iSymbolUniqCnt = 0;
 
-    map<wchar_t, int> mapMsg;
-    map<wchar_t, int> mapCommon;
-    map<wchar_t, int> mapSubCommon;
-    map<wchar_t, int> mapNumber;
-    map<wchar_t, int> mapAlphabet;
-    map<wchar_t, int> mapEmoji;
-    map<wchar_t, int> mapSymbol;
-
-
-    
+    double adFeatureVector[BUFFER_LEN];
+    int iFeatureCnt = 0;
     ofstream iWriterFile("rst_feature.txt", ios_base::out);
     char acOut[BUFFER_LEN];
     while (getline(iReadFile, strLine))
     {
-        mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
-
-        iMsgLen = (int)wcslen(wcaTmp);
-        iMsgUniqCnt = 0;
-        iCommonCnt = 0;
-        iCommonUniqCnt = 0;
-        iSubCommonCnt = 0;
-        iSubCommonUniqCnt = 0;
-        iNumberCnt = 0;
-        iNumberUniqCnt = 0;
-        iAlphabetCnt = 0;
-        iAlphabetUniqCnt = 0;
-        iEmojiCnt = 0;
-        iEmojiUniqCnt = 0;
-        iSymbolCnt = 0;
-        iSymbolUniqCnt = 0;
-        
-        mapMsg.clear();
-        mapCommon.clear();
-        mapSubCommon.clear();
-        mapNumber.clear();
-        mapAlphabet.clear();
-        mapEmoji.clear();
-        mapSymbol.clear();
-        
-        for (int i=0; i<iMsgLen; i++)
-        {
-            mapMsg[wcaTmp[i]] = 1;
-            if (m_mapCommonChineseCharacter[wcaTmp[i]] == 1)
-            {
-                iCommonCnt ++;
-                mapCommon[wcaTmp[i]] = 1;
-            }
-            if (m_mapSubCommonChineseCharacter[wcaTmp[i]] == 1)
-            {
-                iSubCommonCnt ++;
-                mapSubCommon[wcaTmp[i]] = 1;
-            }
-            if (m_mapNumber[wcaTmp[i]] == 1)
-            {
-                iNumberCnt ++;
-                mapNumber[wcaTmp[i]] = 1;
-            }
-            if (m_mapAlphabet[wcaTmp[i]] == 1)
-            {
-                iAlphabetCnt ++;
-                mapAlphabet[wcaTmp[i]] = 1;
-            }
-            if (m_mapEmoji[wcaTmp[i]] == 1)
-            {
-                iEmojiCnt ++;
-                mapEmoji[wcaTmp[i]] = 1;
-            }
-            if (m_mapSymbol[wcaTmp[i]] == 1)
-            {
-                iSymbolCnt ++;
-                mapSymbol[wcaTmp[i]] = 1;
-            }
-            
-        }
-        iMsgUniqCnt = mapMsg.size();
-        iCommonUniqCnt = mapCommon.size();
-        iSubCommonUniqCnt = mapSubCommon.size();
-        iNumberUniqCnt = mapNumber.size();
-        iAlphabetUniqCnt = mapAlphabet.size();
-        iEmojiUniqCnt = mapEmoji.size();
-        iSymbolUniqCnt = mapSymbol.size();
-
-        float fTmp1 = (float)iMsgUniqCnt/iMsgLen;
-        
-        float fTmp2 = (float)iCommonCnt/iMsgLen;
-        
-        float fTmp3 = 0;
-        if (iCommonCnt != 0) fTmp3 = (float)iCommonUniqCnt/iCommonCnt;
-        
-        float fTmp4 = (float)iSubCommonCnt/iMsgLen;
-        
-        float fTmp5 = 0;
-        if (iSubCommonCnt != 0) fTmp5 = (float)iSubCommonUniqCnt/iSubCommonCnt;
-        
-        float fTmp6 = (float)iNumberCnt/iMsgLen;
-        
-        float fTmp7 = 0;
-        if (iNumberCnt != 0) fTmp7 = (float)iNumberUniqCnt/iNumberCnt;
-        
-        float fTmp8 = (float)iAlphabetCnt/iMsgLen;
-        
-        float fTmp9 = 0;
-        if (iAlphabetCnt != 0) fTmp9 = (float)iAlphabetUniqCnt/iAlphabetCnt;
-        
-        float fTmp10 = (float)iEmojiCnt/iMsgLen;
-        
-        float fTmp11 = 0;
-        if (iEmojiCnt != 0) fTmp11 = (float)iEmojiUniqCnt/iEmojiCnt;
-
-        float fTmp12 = (float)iCommonUniqCnt/iMsgUniqCnt;
-        float fTmp13 = (float)iSubCommonUniqCnt/iMsgUniqCnt;
-        float fTmp14 = (float)iNumberUniqCnt/iMsgUniqCnt;
-        float fTmp15 = (float)iAlphabetUniqCnt/iMsgUniqCnt;
-        float fTmp16 = (float)iEmojiUniqCnt/iMsgUniqCnt;
-        
+        iFeatureCnt = 0;
+        memset(adFeatureVector, 0 , sizeof(double)*BUFFER_LEN);
+        get_feature(adFeatureVector, const_cast<char*>(strLine.c_str()));
 
         snprintf(acOut, BUFFER_LEN, "1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%d 10:%d 11:%d 12:%d 13:%d 14:%d\n"
-                 ,iMsgLen       
-                 ,iMsgUniqCnt
-                 ,iCommonCnt    
-                 ,iCommonUniqCnt
-                 ,iSubCommonCnt
-                 ,iSubCommonUniqCnt
-                 ,iNumberCnt    
-                 ,iNumberUniqCnt
-                 ,iAlphabetCnt  
-                 ,iAlphabetUniqCnt
-                 ,iEmojiCnt     
-                 ,iEmojiUniqCnt
-                 ,iSymbolCnt
-                 ,iSymbolUniqCnt
+                 ,(int)adFeatureVector[0]
+                 ,(int)adFeatureVector[1]
+                 ,(int)adFeatureVector[2]
+                 ,(int)adFeatureVector[3]
+                 ,(int)adFeatureVector[4]
+                 ,(int)adFeatureVector[5]
+                 ,(int)adFeatureVector[6]
+                 ,(int)adFeatureVector[7]
+                 ,(int)adFeatureVector[8]
+                 ,(int)adFeatureVector[9]
+                 ,(int)adFeatureVector[10]
+                 ,(int)adFeatureVector[11]
+                 ,(int)adFeatureVector[12]
+                 ,(int)adFeatureVector[13]
 
-                 // ,fTmp1
-                 // ,fTmp2
-                 // ,fTmp3
             );
-        // snprintf(acOut, BUFFER_LEN, "1:%d 2:%f 3:%f 4:%f 5:%f 6:%f 7:%f 8:%f 9:%f 10:%f 11:%f 12:%f 13:%f 14:%f 15:%f 16:%f 17:%f\n"
-        //          ,iMsgLen
-        //          ,fTmp1
-        //          ,fTmp2
-        //          ,fTmp3
-        //          ,fTmp4
-        //          ,fTmp5
-        //          ,fTmp6
-        //          ,fTmp7
-        //          ,fTmp8
-        //          ,fTmp9
-        //          ,fTmp10
-        //          ,fTmp11
-        //          ,fTmp12
-        //          ,fTmp13
-        //          ,fTmp14
-        //          ,fTmp15
-        //          ,fTmp16
-        //     );
         iWriterFile << acOut;
     }
     iReadFile.close();
@@ -600,6 +484,7 @@ int CTextProcessor::init_common_chinese_character(char *pcFileName)
     if (iReadFile.fail()) return -1;
     string strLine;
     wchar_t wcaTmp[BUFFER_LEN];
+    m_mapCommonChineseCharacter.clear();
     while (getline(iReadFile, strLine))
     {
         mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
@@ -624,6 +509,7 @@ int CTextProcessor::init_sub_common_chinese_character(char *pcFileName)
     if (iReadFile.fail()) return -1;
     string strLine;
     wchar_t wcaTmp[BUFFER_LEN];
+    m_mapSubCommonChineseCharacter.clear();
     while (getline(iReadFile, strLine))
     {
         mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
@@ -648,6 +534,7 @@ int CTextProcessor::init_number(char *pcFileName)
     if (iReadFile.fail()) return -1;
     string strLine;
     wchar_t wcaTmp[BUFFER_LEN];
+    m_mapNumber.clear();
     while (getline(iReadFile, strLine))
     {
         mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
@@ -672,6 +559,7 @@ int CTextProcessor::init_alphabet(char *pcFileName)
     if (iReadFile.fail()) return -1;
     string strLine;
     wchar_t wcaTmp[BUFFER_LEN];
+    m_mapAlphabet.clear();
     while (getline(iReadFile, strLine))
     {
         mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
@@ -696,6 +584,7 @@ int CTextProcessor::init_emoji(char *pcFileName)
     if (iReadFile.fail()) return -1;
     string strLine;
     wchar_t wcaTmp[BUFFER_LEN];
+    m_mapEmoji.clear();
     while (getline(iReadFile, strLine))
     {
         mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
@@ -720,6 +609,7 @@ int CTextProcessor::init_symbol(char *pcFileName)
     if (iReadFile.fail()) return -1;
     string strLine;
     wchar_t wcaTmp[BUFFER_LEN];
+    m_mapSymbol.clear();
     while (getline(iReadFile, strLine))
     {
         mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
@@ -731,5 +621,224 @@ int CTextProcessor::init_symbol(char *pcFileName)
     }
     m_bIsInitSymbol = true;
     iReadFile.close();
+    return 0;
+}
+
+
+int CTextProcessor::set_common_chinese_character_file_name(char *pcFileName)
+{
+    if (pcFileName == NULL) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    memset(m_acCommonChineseCharacterDataFile, 0, BUFFER_LEN);
+    strncpy(m_acCommonChineseCharacterDataFile, pcFileName, BUFFER_LEN);
+    return 0;
+}
+
+int CTextProcessor::set_sub_common_chinese_character_file_name(char *pcFileName)
+{
+    if (pcFileName == NULL) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    memset(m_acSubCommonChineseCharacterDataFile, 0, BUFFER_LEN);
+    strncpy(m_acSubCommonChineseCharacterDataFile, pcFileName, BUFFER_LEN);
+    return 0;
+}
+
+int CTextProcessor::set_number_file_name(char *pcFileName)
+{
+    if (pcFileName == NULL) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    memset(m_acNumberDataFile, 0, BUFFER_LEN);
+    strncpy(m_acNumberDataFile, pcFileName, BUFFER_LEN);
+    return 0;    
+}
+
+int CTextProcessor::set_alphabet_file_name(char *pcFileName)
+{
+    if (pcFileName == NULL) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    memset(m_acAlphabetDataFile, 0, BUFFER_LEN);
+    strncpy(m_acAlphabetDataFile, pcFileName, BUFFER_LEN);
+    return 0;
+}
+
+int CTextProcessor:: set_emoji_file_name(char *pcFileName)
+{
+    if (pcFileName == NULL) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    memset(m_acEmojiDataFile, 0, BUFFER_LEN);
+    strncpy(m_acEmojiDataFile, pcFileName, BUFFER_LEN);
+    return 0;
+}
+
+int CTextProcessor::set_symbol_file_name(char *pcFileName)
+{
+    if (pcFileName == NULL) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    memset(m_acSymbolDataFile, 0, BUFFER_LEN);
+    strncpy(m_acSymbolDataFile, pcFileName, BUFFER_LEN);
+    return 0;
+}
+
+int CTextProcessor::init_svm_model(char *pcFileName)
+{
+    if (m_bIsInitSvmModel == true) return 0;
+    if (pcFileName == NULL) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    if ((m_pSvmModel = svm_load_model(pcFileName)) == 0)
+    {
+        printf("error: open model of svm failed\n");
+        return -1;
+    }
+    m_bIsInitSvmModel = true;
+    return 0;
+}
+
+double CTextProcessor::get_svm_predict(char *pcInput)
+{
+    if (pcInput == NULL) return -1;
+    if (strlen(pcInput) >= BUFFER_LEN) return -1;
+    if (init_svm_model(m_acSvmModelDataFile) != 0) return -1;
+    double adFeatureVector[BUFFER_LEN];
+    int iFeatureCnt = 0;
+    iFeatureCnt = get_feature(adFeatureVector, pcInput);
+    struct svm_node stSvmNode[BUFFER_LEN];
+    int i = 0;
+    for (i = 0; i < iFeatureCnt; i++)
+    {
+        stSvmNode[i].index = i + 1;
+        stSvmNode[i].value = adFeatureVector[i];
+    }
+    stSvmNode[i].index = -1;
+    double dRstPredict = svm_predict(m_pSvmModel, stSvmNode);
+    return dRstPredict;
+}
+
+int CTextProcessor::get_feature(double adFeatureVector[], char *pcMsg)
+{
+    if (pcMsg == NULL) return -1;
+    if (strlen(pcMsg) >= BUFFER_LEN) return -1;
+    if (init_common_chinese_character(m_acCommonChineseCharacterDataFile) != 0) return -1;
+    if (init_sub_common_chinese_character(m_acSubCommonChineseCharacterDataFile) != 0) return -1;
+    if (init_number(m_acNumberDataFile) != 0) return -1;
+    if (init_alphabet(m_acAlphabetDataFile) != 0) return -1;
+    if (init_emoji(m_acEmojiDataFile) != 0) return -1;
+    if (init_symbol(m_acSymbolDataFile) != 0) return -1;
+
+    wchar_t wcaTmp[BUFFER_LEN];
+
+    int iMsgLen = 0;
+    int iMsgUniqCnt = 0;
+    int iCommonCnt = 0;
+    int iCommonUniqCnt = 0;
+    int iSubCommonCnt = 0;
+    int iSubCommonUniqCnt = 0;
+    int iNumberCnt = 0;
+    int iNumberUniqCnt = 0;
+    int iAlphabetCnt = 0;
+    int iAlphabetUniqCnt = 0;
+    int iEmojiCnt = 0;
+    int iEmojiUniqCnt = 0;
+    int iSymbolCnt = 0;
+    int iSymbolUniqCnt = 0;
+
+    map<wchar_t, int> mapMsg;
+    map<wchar_t, int> mapCommon;
+    map<wchar_t, int> mapSubCommon;
+    map<wchar_t, int> mapNumber;
+    map<wchar_t, int> mapAlphabet;
+    map<wchar_t, int> mapEmoji;
+    map<wchar_t, int> mapSymbol;
+
+    mbstowcs(wcaTmp, pcMsg, BUFFER_LEN);
+    iMsgLen = (int)wcslen(wcaTmp);
+    int i = 0;
+    for (i=0; i<iMsgLen; i++)
+    {
+        mapMsg[wcaTmp[i]] = 1;
+        if (m_mapCommonChineseCharacter[wcaTmp[i]] == 1)
+        {
+            iCommonCnt ++;
+            mapCommon[wcaTmp[i]] = 1;
+        }
+        if (m_mapSubCommonChineseCharacter[wcaTmp[i]] == 1)
+        {
+            iSubCommonCnt ++;
+            mapSubCommon[wcaTmp[i]] = 1;
+        }
+        if (m_mapNumber[wcaTmp[i]] == 1)
+        {
+            iNumberCnt ++;
+            mapNumber[wcaTmp[i]] = 1;
+        }
+        if (m_mapAlphabet[wcaTmp[i]] == 1)
+        {
+            iAlphabetCnt ++;
+            mapAlphabet[wcaTmp[i]] = 1;
+        }
+        if (m_mapEmoji[wcaTmp[i]] == 1)
+        {
+            iEmojiCnt ++;
+            mapEmoji[wcaTmp[i]] = 1;
+        }
+        if (m_mapSymbol[wcaTmp[i]] == 1)
+        {
+            iSymbolCnt ++;
+            mapSymbol[wcaTmp[i]] = 1;
+        }   
+    }
+    iMsgUniqCnt = mapMsg.size();
+    iCommonUniqCnt = mapCommon.size();
+    iSubCommonUniqCnt = mapSubCommon.size();
+    iNumberUniqCnt = mapNumber.size();
+    iAlphabetUniqCnt = mapAlphabet.size();
+    iEmojiUniqCnt = mapEmoji.size();
+    iSymbolUniqCnt = mapSymbol.size();
+
+    adFeatureVector[0] = (double)iMsgLen;
+    adFeatureVector[1] = (double)iMsgUniqCnt;
+    adFeatureVector[2] = (double)iCommonCnt;
+    adFeatureVector[3] = (double)iCommonUniqCnt;
+    adFeatureVector[4] = (double)iSubCommonCnt;
+    adFeatureVector[5] = (double)iSubCommonUniqCnt;
+    adFeatureVector[6] = (double)iNumberCnt;
+    adFeatureVector[7] = (double)iNumberUniqCnt;
+    adFeatureVector[8] = (double)iAlphabetCnt;
+    adFeatureVector[9] = (double)iAlphabetUniqCnt;
+    adFeatureVector[10] = (double)iEmojiCnt;
+    adFeatureVector[11] = (double)iEmojiUniqCnt;
+    adFeatureVector[12] = (double)iSymbolCnt;
+    adFeatureVector[13] = (double)iSymbolUniqCnt;
+
+    adFeatureVector[14] = -1;
+    return 14;                  // feature number
+}
+
+int CTextProcessor::set_svm_model_file_name(char *pcFileName)
+{
+    if (pcFileName == NULL) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    memset(m_acSvmModelDataFile, 0, BUFFER_LEN);
+    strncpy(m_acSvmModelDataFile, pcFileName, BUFFER_LEN);
+    return 0;
+}
+
+int CTextProcessor::reload_init_data()
+{
+    m_bIsInitReplaceDate = false;
+    m_bIsInitCommonChineseCharacter = false;
+    m_bIsInitSubCommonChineseCharacter = false;
+    m_bIsInitNumber = false;
+    m_bIsInitAlphabet = false;
+    m_bIsInitEmoji = false;
+    m_bIsInitSymbol = false;
+    m_bIsInitSvmModel = false;
+    if (init_replace_data(m_acReplaceDataFile) != 0) return -1;
+    if (init_common_chinese_character(m_acCommonChineseCharacterDataFile) != 0) return -1;
+    if (init_sub_common_chinese_character(m_acSubCommonChineseCharacterDataFile) != 0) return -1;
+    if (init_number(m_acNumberDataFile) != 0) return -1;
+    if (init_alphabet(m_acAlphabetDataFile) != 0) return -1;
+    if (init_emoji(m_acEmojiDataFile) != 0) return -1;
+    if (init_symbol(m_acSymbolDataFile) != 0) return -1;
+    if (init_svm_model(m_acSvmModelDataFile) != 0) return -1;
     return 0;
 }
