@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 00:17:53>
+// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 14:37:35>
 // Name           : main.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -462,7 +462,7 @@ int main(int argc, char *argv[])
     // filter_msg(argv[1]);
     CTextProcessor oCTextProcessor;
     // oCTextProcessor.reload_init_data();
-    oCTextProcessor.get_sample_feature(argv[1]);
+    // oCTextProcessor.get_sample_feature(argv[1]);
     double dRst = oCTextProcessor.get_svm_predict("100元-3万金币要的加QQ14757928先货");
     printf("predict rst: %g\n", dRst);
     // // oCTextProcessor.stat_msg_length(argv[1]);

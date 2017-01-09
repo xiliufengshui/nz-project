@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 00:04:20>
+// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 15:01:49>
 // Name           : text_processor.h
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -58,6 +58,7 @@ public:
     int get_feature(double adFeatureVector[], char *pcMsg);
     int set_svm_model_file_name(char *pcFileName);
     int reload_init_data();
+    int init_from_configuration_file(char *pcFileName);
 
     map<wchar_t, wchar_t> m_mapReplace;
     map<wchar_t, int> m_mapCommonChineseCharacter;

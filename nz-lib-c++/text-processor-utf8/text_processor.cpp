@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 00:19:34>
+// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 15:13:00>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -10,6 +10,8 @@
 
 
 #include "text_processor.h"
+
+#include "NZconfig.h"
 
 
 CTextProcessor::CTextProcessor()
@@ -840,5 +842,31 @@ int CTextProcessor::reload_init_data()
     if (init_emoji(m_acEmojiDataFile) != 0) return -1;
     if (init_symbol(m_acSymbolDataFile) != 0) return -1;
     if (init_svm_model(m_acSvmModelDataFile) != 0) return -1;
+    return 0;
+}
+
+int CTextProcessor::init_from_configuration_file(char *pcFileName)
+{
+    if (pcFileName == NULL) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    string strReplaceDataFile;
+    string strCommonChineseCharacterDataFile;
+    string strSubCommonChineseCharacterDataFile;
+    string strNumberDataFile;
+    string strAlphabetDataFile;
+    string strEmojiDataFile;
+    string strSymbolDataFile;
+    string strSvmModelDataFile;
+    
+    NZconfig oNZconfig;
+    oNZconfig.read_config_file(pcFileName);
+    oNZconfig.get_config_value("STR_REPLACE_DATA_FILE", strReplaceDataFile);
+    oNZconfig.get_config_value("STR_COMMON_CHINESE_CHARACTER_DATA_FILE", strCommonChineseCharacterDataFile);
+    oNZconfig.get_config_value("STR_SUB_COMMON_CHINESE_CHARACTER_DATA_FILE", strSubCommonChineseCharacterDataFile);
+    oNZconfig.get_config_value("STR_NUMBER_DATA_FILE", strNumberDataFile);
+    oNZconfig.get_config_value("STR_ALPHABET_DATA_FILE", strAlphabetDataFile);
+    oNZconfig.get_config_value("STR_EMOJI_DATA_FILE", strEmojiDataFile);
+    oNZconfig.get_config_value("STR_SYMBOL_DATA_FILE", strSymbolDataFile);
+    oNZconfig.get_config_value("STR_SVMMODEL_DATA_FILE", strSvmModelDataFile);
     return 0;
 }
