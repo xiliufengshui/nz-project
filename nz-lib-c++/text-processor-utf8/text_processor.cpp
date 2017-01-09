@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 15:13:00>
+// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 15:36:13>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -25,14 +25,14 @@ CTextProcessor::CTextProcessor()
     m_bIsInitSymbol = false;
     m_bIsInitSvmModel = false;
     
-    snprintf(m_acReplaceDataFile, BUFFER_LEN, "%s", "replace_data_utf8.txt");
-    snprintf(m_acCommonChineseCharacterDataFile, BUFFER_LEN, "%s", "common_chinese_character_utf8.txt");
-    snprintf(m_acSubCommonChineseCharacterDataFile, BUFFER_LEN, "%s", "sub_common_chinese_character_utf8.txt");
-    snprintf(m_acNumberDataFile, BUFFER_LEN, "%s", "number_utf8.txt");
-    snprintf(m_acAlphabetDataFile, BUFFER_LEN, "%s", "alphabet_utf8.txt");
-    snprintf(m_acEmojiDataFile, BUFFER_LEN, "%s", "emoji_utf8.txt");
-    snprintf(m_acSymbolDataFile, BUFFER_LEN, "%s", "symbol_utf8.txt");
-    snprintf(m_acSvmModelDataFile, BUFFER_LEN, "%s", "rst_feature_train.txt.model");
+    snprintf(m_acReplaceDataFile, BUFFER_LEN, "%s", "./corpus/replace_data_utf8.txt");
+    snprintf(m_acCommonChineseCharacterDataFile, BUFFER_LEN, "%s", "./corpus/common_chinese_character_utf8.txt");
+    snprintf(m_acSubCommonChineseCharacterDataFile, BUFFER_LEN, "%s", "./corpus/sub_common_chinese_character_utf8.txt");
+    snprintf(m_acNumberDataFile, BUFFER_LEN, "%s", "./corpus/number_utf8.txt");
+    snprintf(m_acAlphabetDataFile, BUFFER_LEN, "%s", "./corpus/alphabet_utf8.txt");
+    snprintf(m_acEmojiDataFile, BUFFER_LEN, "%s", "./corpus/emoji_utf8.txt");
+    snprintf(m_acSymbolDataFile, BUFFER_LEN, "%s", "./corpus/symbol_utf8.txt");
+    snprintf(m_acSvmModelDataFile, BUFFER_LEN, "%s", "./rst_feature_train.txt.model");
 
     m_pSvmModel = NULL;
     
@@ -868,5 +868,17 @@ int CTextProcessor::init_from_configuration_file(char *pcFileName)
     oNZconfig.get_config_value("STR_EMOJI_DATA_FILE", strEmojiDataFile);
     oNZconfig.get_config_value("STR_SYMBOL_DATA_FILE", strSymbolDataFile);
     oNZconfig.get_config_value("STR_SVMMODEL_DATA_FILE", strSvmModelDataFile);
+
+    set_replace_date_file_name(const_cast<char*>(strReplaceDataFile.c_str()));
+    set_common_chinese_character_file_name(const_cast<char*>(strCommonChineseCharacterDataFile.c_str()));
+    set_sub_common_chinese_character_file_name(const_cast<char*>(strSubCommonChineseCharacterDataFile.c_str()));
+    set_number_file_name(const_cast<char*>(strNumberDataFile.c_str()));
+    set_alphabet_file_name(const_cast<char*>(strAlphabetDataFile.c_str()));
+    set_emoji_file_name(const_cast<char*>(strEmojiDataFile.c_str()));
+    set_symbol_file_name(const_cast<char*>(strSymbolDataFile.c_str()));
+    set_svm_model_file_name(const_cast<char*>(strSvmModelDataFile.c_str()));
+
+    reload_init_data();
+
     return 0;
 }
