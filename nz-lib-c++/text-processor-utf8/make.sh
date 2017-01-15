@@ -3,7 +3,7 @@
 rm -f *.o
 rm -f libtext_processor.a
 
-g++ -fPIC -c text_processor.cpp svm.cpp
+g++ -fPIC -c text_processor.cpp svm.cpp NZconfig.cpp
 ar -crsv libtext_processor.a *.o
 
 rm -f *.o
