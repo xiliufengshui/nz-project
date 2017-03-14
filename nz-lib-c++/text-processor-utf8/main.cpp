@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 16:05:57>
+// LastChangeTime : Time-stamp: <naturezhang 2017/01/20 16:04:29>
 // Name           : main.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -45,26 +45,26 @@ int init_replace_data(char *pcDataFile)
     return 0;
 }
 
-int replace_word(wchar_t *pwcOutput, wchar_t *pwcInput)
-{
-    char *pcDataFile = "test_replace";
-    int iRst = init_replace_data(pcDataFile);
-    if (iRst != 0) printf("error: init replace wrong\n");
+// int replace_word(wchar_t *pwcOutput, wchar_t *pwcInput)
+// {
+//     char *pcDataFile = "test_replace";
+//     int iRst = init_replace_data(pcDataFile);
+//     if (iRst != 0) printf("error: init replace wrong\n");
     
-    int iLen = (int)wcslen(pwcInput);
-    for (int i=0; i<iLen; i++)
-    {
-        if (0 == g_mapReplace[pwcInput[i]])
-        {
-            pwcOutput[i] = pwcInput[i];
-        }
-        else
-        {
-            pwcOutput[i] = g_mapReplace[pwcInput[i]];
-        }
-    }
-    return 0;
-}
+//     int iLen = (int)wcslen(pwcInput);
+//     for (int i=0; i<iLen; i++)
+//     {
+//         if (0 == g_mapReplace[pwcInput[i]])
+//         {
+//             pwcOutput[i] = pwcInput[i];
+//         }
+//         else
+//         {
+//             pwcOutput[i] = g_mapReplace[pwcInput[i]];
+//         }
+//     }
+//     return 0;
+// }
 
 int single_word_stat_other(char *pcFileName)
 {
@@ -457,51 +457,73 @@ int filter_msg(char *pcFileName)
     return 0;
 }
 
+// int main(int argc, char *argv[])
+// {
+//     // filter_msg(argv[1]);
+//     CTextProcessor oCTextProcessor;
+//     oCTextProcessor.init_from_configuration_file(argv[1]);
+//     // oCTextProcessor.reload_init_data();
+//     oCTextProcessor.get_sample_feature(argv[2]);
+//     // double dRst = oCTextProcessor.get_svm_predict("100元-3万金币要的加QQ14757928先货");
+//     // printf("predict rst: %g\n", dRst);
+//     // // oCTextProcessor.stat_msg_length(argv[1]);
+//     // oCTextProcessor.tag_msg_length(argv[1]);
+//     // oCTextProcessor.get_sample_feature(argv[1]);
+    
+//     // if (argc != 3)
+//     // {
+//     //     cout << "example: " << argv[0] << " filename option[single|before|next|all|test]" << endl;
+//     //     return 0;
+//     // }
+    
+//     // if (strcmp(argv[2], "single") == 0)
+//     // {
+//     //     printf("I am single\n");
+//     //     oCTextProcessor.single_word_stat(argv[1]);
+//     // }
+//     // if (strcmp(argv[2], "before") == 0)
+//     // {
+//     //     printf("I am before\n");
+//     //     oCTextProcessor.before_word_stat(argv[1]);
+//     // }
+//     // if (strcmp(argv[2], "next") == 0)
+//     // {
+//     //     printf("I am next\n");
+//     //     oCTextProcessor.next_word_stat(argv[1]);
+//     // }
+//     // if (strcmp(argv[2], "all") == 0)
+//     // {
+//     //     printf("I am all\n");
+//     //     oCTextProcessor.get_all_stat(argv[1]);
+//     // }
+//     // if (strcmp(argv[2], "test") == 0)
+//     // {
+//     //     printf("I am test\n");
+//     //     test(argv[1]);
+//     // }
+//     cout << "finish" << endl;
+//     return 0;
+// }
+
 int main(int argc, char *argv[])
 {
-    // filter_msg(argv[1]);
     CTextProcessor oCTextProcessor;
-    oCTextProcessor.init_from_configuration_file(argv[1]);
-    // oCTextProcessor.reload_init_data();
-    oCTextProcessor.get_sample_feature(argv[2]);
-    // double dRst = oCTextProcessor.get_svm_predict("100元-3万金币要的加QQ14757928先货");
-    // printf("predict rst: %g\n", dRst);
-    // // oCTextProcessor.stat_msg_length(argv[1]);
-    // oCTextProcessor.tag_msg_length(argv[1]);
-    // oCTextProcessor.get_sample_feature(argv[1]);
+    oCTextProcessor.init_key_word(argv[1]);
+    // map<int, string>::iterator iter;
+    // for (iter=oCTextProcessor.m_mapKeyWord.begin(); iter!=oCTextProcessor.m_mapKeyWord.end(); iter++)
+    // {
+    //     cout << iter->first << "    " << iter->second << endl;
+    // }
+    oCTextProcessor.init_ac_trie();
+    // struct TireNode stTireNode;
+    // cout << stTireNode.wcWord << endl;
+    // cout << stTireNode.iFailPoint << endl;
+    // cout << stTireNode.iKeyWordIndex << endl;
+    // cout << stTireNode.mapNext.size() << endl;
     
-    // if (argc != 3)
-    // {
-    //     cout << "example: " << argv[0] << " filename option[single|before|next|all|test]" << endl;
-    //     return 0;
-    // }
+    cout << "finish!" << endl;
+
     
-    // if (strcmp(argv[2], "single") == 0)
-    // {
-    //     printf("I am single\n");
-    //     oCTextProcessor.single_word_stat(argv[1]);
-    // }
-    // if (strcmp(argv[2], "before") == 0)
-    // {
-    //     printf("I am before\n");
-    //     oCTextProcessor.before_word_stat(argv[1]);
-    // }
-    // if (strcmp(argv[2], "next") == 0)
-    // {
-    //     printf("I am next\n");
-    //     oCTextProcessor.next_word_stat(argv[1]);
-    // }
-    // if (strcmp(argv[2], "all") == 0)
-    // {
-    //     printf("I am all\n");
-    //     oCTextProcessor.get_all_stat(argv[1]);
-    // }
-    // if (strcmp(argv[2], "test") == 0)
-    // {
-    //     printf("I am test\n");
-    //     test(argv[1]);
-    // }
-    cout << "finish" << endl;
     return 0;
 }
 

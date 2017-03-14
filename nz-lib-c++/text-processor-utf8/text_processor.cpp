@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 15:36:13>
+// LastChangeTime : Time-stamp: <naturezhang 2017/03/14 21:29:08>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -46,7 +46,6 @@ CTextProcessor::~CTextProcessor()
         svm_free_and_destroy_model(&m_pSvmModel);
     }
 }
-
 
 int CTextProcessor::init_replace_data(char *pcDataFileName)
 {
@@ -98,7 +97,7 @@ int CTextProcessor::replace_word(wchar_t *pwcOutput, wchar_t *pwcInput)
     int i=0;
     for (i=0; i<iLen; i++)
     {
-        if (0 == m_mapReplace[pwcInput[i]])
+        if (m_mapReplace.find(pwcInput[i]) == m_mapReplace.end())
         {
             pwcOutput[i] = pwcInput[i];
         }
@@ -132,7 +131,7 @@ int CTextProcessor::replace_word(char *pcOutput, char *pcInput)
     int i = 0;
     for (i=0; i<iLen; i++)
     {
-        if (0 == m_mapReplace[wcaInput[i]])
+        if (m_mapReplace.find(wcaInput[i]) == m_mapReplace.end())
         {
             wcaOutput[i] = wcaInput[i];
         }
@@ -880,5 +879,128 @@ int CTextProcessor::init_from_configuration_file(char *pcFileName)
 
     reload_init_data();
 
+    return 0;
+}
+
+int CTextProcessor::init_key_word(char *pcFileName)
+{
+    if (pcFileName == NULL) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    ifstream iReadFile;
+    iReadFile.open(pcFileName, ios_base::in);
+    if (iReadFile.fail()) return -1;
+    string strLine;
+    int iRows = 0;
+    while (getline(iReadFile, strLine))
+    {
+        iRows ++;
+        m_mapKeyWord[iRows] = strLine;
+    }
+    iReadFile.close();
+    return 0;
+}
+
+int CTextProcessor::init_ac_trie()
+{
+    struct TrieNode stRootTrieNode;
+    int iRootTreePoint = 0;
+    int iTreePoint = 0;
+    m_mapAcTrie[iRootTreePoint] = stRootTrieNode;
+    wchar_t wcaTmp[BUFFER_LEN];
+    // 创建ac树
+    map<int, string>::iterator iter;
+    for (iter=m_mapKeyWord.begin(); iter!=m_mapKeyWord.end(); iter++)
+    {
+        int iKeyWordIndex = iter->first;
+        string strKeyWord = iter->second;
+        int iPreTreePoint = iRootTreePoint;
+        mbstowcs(wcaTmp, strKeyWord.c_str(), BUFFER_LEN);
+        if (strKeyWord.size() >= BUFFER_LEN)
+        {
+            printf("waring: keyword too long [ %s ]", strKeyWord.c_str());
+        }
+        int iLen = (int)wcslen(wcaTmp);
+        int i = 0;
+        for (i=0; i<iLen; i++)
+        {
+            if (m_mapAcTrie[iPreTreePoint].mapNext.find(wcaTmp[i]) == m_mapAcTrie[iPreTreePoint].mapNext.end())
+            {
+                iTreePoint ++;
+                struct TrieNode stTmpTrieNode;
+                m_mapAcTrie[iTreePoint] = stTmpTrieNode;
+                m_mapAcTrie[iPreTreePoint].mapNext[wcaTmp[i]] = iTreePoint;
+                iPreTreePoint = iTreePoint;
+            }
+            else
+            {
+                iPreTreePoint = m_mapAcTrie[iPreTreePoint].mapNext[wcaTmp[i]];
+            }
+        }
+        m_mapAcTrie[iPreTreePoint].iKeyWordIndex = iKeyWordIndex;
+    }
+
+    // 构建失败指针 默认初始化时失败指针都指向了根结点 (广度遍历)
+    map<wchar_t, int>::iterator iterTmp;
+    map<wchar_t, int> mapNodeTmp;
+    queue<int> qTmp;
+    qTmp.push(iRootTreePoint);
+    while (!qTmp.empty())
+    {
+        int iTmpNode = qTmp.front();
+        qTmp.pop();
+        int iFailNode = 0;
+        int iNextNode = 0;
+        if(m_mapAcTrie[iTmpNode].mapNext.size() > 0)
+        {
+            if(iTmpNode == iRootTreePoint)
+            {
+                for(iterTmp=m_mapAcTrie[iTmpNode].mapNext.begin(); iterTmp!=m_mapAcTrie[iTmpNode].mapNext.end(); iterTmp++)
+                {
+                    m_mapAcTrie[iterTmp->second].iFailPoint = iRootTreePoint;
+                    qTmp.push(iterTmp->second);
+                }
+            }
+            else
+            {
+                iFailNode = m_mapAcTrie[iTmpNode].iFailPoint;
+                for(iterTmp=m_mapAcTrie[iTmpNode].mapNext.begin(); iterTmp!=m_mapAcTrie[iTmpNode].mapNext.end(); iterTmp++)
+                {
+                    while(1)
+                    {
+                        if(m_mapAcTrie[iFailNode].mapNext.find(iterTmp->first) != m_mapAcTrie[iFailNode].mapNext.end())
+                        {
+                            iNextNode = iterTmp->second;
+                            m_mapAcTrie[iNextNode].iFailPoint = m_mapAcTrie[iFailNode].mapNext[iterTmp->first];
+                            qTmp.push(iNextNode);
+                            break;
+                        }
+                        else
+                        {
+                            if(iFailNode == iRootTreePoint)
+                            {
+                                iNextNode = iterTmp->second;
+                                m_mapAcTrie[iNextNode].iFailPoint = iRootTreePoint;
+                                qTmp.push(iNextNode);
+                                break;
+                            }
+                            iFailNode = m_mapAcTrie[iFailNode].iFailPoint;
+                        }
+                    }
+                    
+                }
+            }
+        }
+    }
+    // 打印树结构
+    for (int i = 0; i <= iTreePoint; i++)
+    {
+        map<wchar_t, int>::iterator iterTmp;
+        printf("%d %d %d", i, m_mapAcTrie[i].iKeyWordIndex, m_mapAcTrie[i].iFailPoint);
+        for (iterTmp=m_mapAcTrie[i].mapNext.begin(); iterTmp!=m_mapAcTrie[i].mapNext.end(); iterTmp ++)
+        {
+            printf("(%lc, %d) ", iterTmp->first, iterTmp->second);
+        }
+        printf("\n");
+    }
     return 0;
 }

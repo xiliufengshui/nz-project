@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/01/09 15:01:49>
+// LastChangeTime : Time-stamp: <naturezhang 2017/03/14 21:04:03>
 // Name           : text_processor.h
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -15,6 +15,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <queue>
 #include <stdlib.h>
 #include <locale.h>
 #include <string.h>
@@ -24,6 +25,18 @@
 using namespace std;
 
 #define BUFFER_LEN 1024
+
+struct TrieNode
+{
+    map<wchar_t, int> mapNext;
+    int iFailPoint;
+    int iKeyWordIndex;
+    TrieNode(){
+        mapNext.clear();
+        iFailPoint = 0;
+        iKeyWordIndex = 0;
+    }
+};
 
 class CTextProcessor
 {
@@ -59,7 +72,9 @@ public:
     int set_svm_model_file_name(char *pcFileName);
     int reload_init_data();
     int init_from_configuration_file(char *pcFileName);
-
+    int init_key_word(char *pcFileName);
+    int init_ac_trie();
+    
     map<wchar_t, wchar_t> m_mapReplace;
     map<wchar_t, int> m_mapCommonChineseCharacter;
     map<wchar_t, int> m_mapSubCommonChineseCharacter;
@@ -87,6 +102,11 @@ public:
     char m_acSvmModelDataFile[BUFFER_LEN];
     
     struct svm_model* m_pSvmModel;
+
+    map<int, string> m_mapKeyWord; /* 关键词 */
+
+    map<int, struct TrieNode> m_mapAcTrie; /* AC 自动机 trie树 */
+
 };
 
 
