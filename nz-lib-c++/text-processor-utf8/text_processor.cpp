@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/03/15 01:45:46>
+// LastChangeTime : Time-stamp: <naturezhang 2017/03/17 17:16:29>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -828,6 +828,10 @@ int CTextProcessor::init_key_word(char *pcFileName)
     int iRows = 0;
     while (getline(iReadFile, strLine))
     {
+        if (strLine.empty())
+        {
+            continue;
+        }
         iRows ++;
         m_mapKeyWord[iRows] = strLine;
         if (iRows >= 1000000)
@@ -931,15 +935,96 @@ int CTextProcessor::init_ac_trie()
         }
     }
     // 打印树结构
-    for (int i = 0; i <= iTreePoint; i++)
+    // for (int i = 0; i <= iTreePoint; i++)
+    // {
+    //     map<wchar_t, int>::iterator iterTmp;
+    //     printf("%d %d %d", i, m_mapAcTrie[i].iKeyWordIndex, m_mapAcTrie[i].iFailPoint);
+    //     for (iterTmp=m_mapAcTrie[i].mapNext.begin(); iterTmp!=m_mapAcTrie[i].mapNext.end(); iterTmp ++)
+    //     {
+    //         printf("(%lc, %d) ", iterTmp->first, iterTmp->second);
+    //     }
+    //     printf("\n");
+    // }
+    return 0;
+}
+
+int CTextProcessor::get_all_find_key_word(map<string, int> &mapRst , char *pcInput)
+{
+    if (pcInput == NULL) return -1;
+    if (strlen(pcInput) >= MSG_MAX_LEN) return -2;
+    if (m_mapAcTrie.empty()) return -3;
+    if (m_mapKeyWord.empty()) return -4;
+    wchar_t wcaTmp[MSG_MAX_LEN];
+    mbstowcs(wcaTmp, pcInput, MSG_MAX_LEN);
+    int iLen = (int)wcslen(wcaTmp);
+    int i = 0;
+    int iRootTreePoint = 0;
+    int iCurPoint = iRootTreePoint;
+    map<wchar_t, int>::iterator iter;
+    for (i=0; i<iLen; i++)
     {
-        map<wchar_t, int>::iterator iterTmp;
-        printf("%d %d %d", i, m_mapAcTrie[i].iKeyWordIndex, m_mapAcTrie[i].iFailPoint);
-        for (iterTmp=m_mapAcTrie[i].mapNext.begin(); iterTmp!=m_mapAcTrie[i].mapNext.end(); iterTmp ++)
+        while (1)
         {
-            printf("(%lc, %d) ", iterTmp->first, iterTmp->second);
+            iter = m_mapAcTrie[iCurPoint].mapNext.find(wcaTmp[i]);
+            if (iter != m_mapAcTrie[iCurPoint].mapNext.end())
+            {
+                iCurPoint = m_mapAcTrie[iCurPoint].mapNext[wcaTmp[i]];
+                if (m_mapAcTrie[iCurPoint].iKeyWordIndex > 0)
+                {
+                    mapRst[m_mapKeyWord[m_mapAcTrie[iCurPoint].iKeyWordIndex]] ++;
+                }
+                break;
+            }
+            iCurPoint = m_mapAcTrie[iCurPoint].iFailPoint;
+            if (m_mapAcTrie[iCurPoint].iKeyWordIndex > 0)
+            {
+                mapRst[m_mapKeyWord[m_mapAcTrie[iCurPoint].iKeyWordIndex]] ++;
+            }
+            if (iCurPoint == iRootTreePoint)
+            {
+                break;
+            }
         }
-        printf("\n");
+    }
+    return 0;
+}
+
+int CTextProcessor::find_key_word(char *pcInput)
+{
+    if (pcInput == NULL) return -1;
+    if (strlen(pcInput) >= MSG_MAX_LEN) return -2;
+    if (m_mapAcTrie.empty()) return -3;
+    wchar_t wcaTmp[MSG_MAX_LEN];
+    mbstowcs(wcaTmp, pcInput, MSG_MAX_LEN);
+    int iLen = (int)wcslen(wcaTmp);
+    int i = 0;
+    int iRootTreePoint = 0;
+    int iCurPoint = iRootTreePoint;
+    map<wchar_t, int>::iterator iter;
+    for (i=0; i<iLen; i++)
+    {
+        while (1)
+        {
+            iter = m_mapAcTrie[iCurPoint].mapNext.find(wcaTmp[i]);
+            if (iter != m_mapAcTrie[iCurPoint].mapNext.end())
+            {
+                iCurPoint = m_mapAcTrie[iCurPoint].mapNext[wcaTmp[i]];
+                if (m_mapAcTrie[iCurPoint].iKeyWordIndex > 0)
+                {
+                    return 1;
+                }
+                break;
+            }
+            iCurPoint = m_mapAcTrie[iCurPoint].iFailPoint;
+            if (m_mapAcTrie[iCurPoint].iKeyWordIndex > 0)
+            {
+                return 1;
+            }
+            if (iCurPoint == iRootTreePoint)
+            {
+                break;
+            }
+        }
     }
     return 0;
 }

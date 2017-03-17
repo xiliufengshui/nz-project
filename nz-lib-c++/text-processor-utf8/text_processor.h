@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/03/15 01:44:44>
+// LastChangeTime : Time-stamp: <naturezhang 2017/03/16 17:32:21>
 // Name           : text_processor.h
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -26,6 +26,7 @@
 using namespace std;
 
 #define BUFFER_LEN 1024
+#define MSG_MAX_LEN 10000
 
 struct TrieNode
 {
@@ -81,6 +82,10 @@ public:
     
     int init_key_word(char *pcFileName);
     int init_ac_trie();
+    /* mspRst 返回命中关键词和命中该关键词的次数 */
+    int get_all_find_key_word(map<string, int> &mapRst , char *pcInput);
+    /* 命中关键词即返回 1:命中 0:未命中 */
+    int find_key_word(char *pcInput);
 
 private:
     int stat_word_cnt(char *pcInput, set<wchar_t> &m_set);
