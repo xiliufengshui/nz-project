@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/03/30 23:14:00>
+// LastChangeTime : Time-stamp: <naturezhang 2017/04/10 18:58:48>
 // Name           : text_processor.h
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -88,6 +88,9 @@ public:
     /* 命中关键词即返回 1:命中 0:未命中 */
     int find_key_word(char *pcInput);
 
+    int init_ignore_word(char *pcFileName);
+    int filter_ignore_word(char *pcOutput, char *pcInput);
+
 private:
     int stat_word_cnt(char *pcInput, set<wchar_t> &m_set);
     
@@ -97,7 +100,8 @@ private:
     set<wchar_t> m_setNumber;
     set<wchar_t> m_setAlphabet;
     set<wchar_t> m_setEmoji;
-    set<wchar_t> m_setSymbol; 
+    set<wchar_t> m_setSymbol;
+    set<wchar_t> m_setIgnore;
     
     struct svm_model* m_pSvmModel;
 
