@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/04/10 18:58:48>
+// LastChangeTime : Time-stamp: <naturezhang 2017/05/07 23:36:57>
 // Name           : text_processor.h
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -91,6 +91,9 @@ public:
     int init_ignore_word(char *pcFileName);
     int filter_ignore_word(char *pcOutput, char *pcInput);
 
+    int init_focus_word(char *pcFileName); /* 加载需要保留的字 */
+    int filter_not_focus_word(char *pcOutput, char *pcInput); /* 过滤不关心的字 */
+
 private:
     int stat_word_cnt(char *pcInput, set<wchar_t> &m_set);
     
@@ -102,6 +105,7 @@ private:
     set<wchar_t> m_setEmoji;
     set<wchar_t> m_setSymbol;
     set<wchar_t> m_setIgnore;
+    set<wchar_t> m_setFocus;
     
     struct svm_model* m_pSvmModel;
 

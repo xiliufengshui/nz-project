@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/04/10 19:32:50>
+// LastChangeTime : Time-stamp: <naturezhang 2017/05/08 00:03:30>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -795,6 +795,7 @@ int CTextProcessor::init_from_configuration_file(char *pcFileName)
     string strSvmModelDataFile;
     string strIgnoreDataFile;
     string strKeyWordDataFile;
+    string strFocusWordDataFile;
     
     NZconfig oNZconfig;
     oNZconfig.read_config_file(pcFileName);
@@ -808,19 +809,34 @@ int CTextProcessor::init_from_configuration_file(char *pcFileName)
     oNZconfig.get_config_value("STR_SVMMODEL_DATA_FILE", strSvmModelDataFile);
     oNZconfig.get_config_value("STR_IGNORE_DATA_FILE", strIgnoreDataFile);
     oNZconfig.get_config_value("STR_KEY_WORD_DATA_FILE", strKeyWordDataFile);
+    oNZconfig.get_config_value("STR_FOCUS_WORD_DATA_FILE", strFocusWordDataFile);
 
-    init_replace_data(const_cast<char*>(strReplaceDataFile.c_str()));
-    init_common_chinese_character_data(const_cast<char*>(strCommonChineseCharacterDataFile.c_str()));
-    init_sub_common_chinese_character_data(const_cast<char*>(strSubCommonChineseCharacterDataFile.c_str()));
-    init_number_data(const_cast<char*>(strNumberDataFile.c_str()));
-    init_alphabet_data(const_cast<char*>(strAlphabetDataFile.c_str()));
-    init_emoji_data(const_cast<char*>(strEmojiDataFile.c_str()));
-    init_symbol_data(const_cast<char*>(strSymbolDataFile.c_str()));
-    init_svm_model(const_cast<char*>(strSvmModelDataFile.c_str()));
-    init_ignore_word(const_cast<char*>(strIgnoreDataFile.c_str()));
-    init_key_word(const_cast<char*>(strKeyWordDataFile.c_str()));
+    int iRst = 0;
+    iRst = init_replace_data(const_cast<char*>(strReplaceDataFile.c_str()));
+    if(iRst < 0) return iRst;
+    iRst = init_common_chinese_character_data(const_cast<char*>(strCommonChineseCharacterDataFile.c_str()));
+    if(iRst < 0) return iRst;
+    iRst = init_sub_common_chinese_character_data(const_cast<char*>(strSubCommonChineseCharacterDataFile.c_str()));
+    if(iRst < 0) return iRst;
+    iRst = init_number_data(const_cast<char*>(strNumberDataFile.c_str()));
+    if(iRst < 0) return iRst;
+    iRst = init_alphabet_data(const_cast<char*>(strAlphabetDataFile.c_str()));
+    if(iRst < 0) return iRst;
+    iRst = init_emoji_data(const_cast<char*>(strEmojiDataFile.c_str()));
+    if(iRst < 0) return iRst;
+    iRst = init_symbol_data(const_cast<char*>(strSymbolDataFile.c_str()));
+    if(iRst < 0) return iRst;
+    iRst = init_svm_model(const_cast<char*>(strSvmModelDataFile.c_str()));
+    if(iRst < 0) return iRst;
+    iRst = init_ignore_word(const_cast<char*>(strIgnoreDataFile.c_str()));
+    if(iRst < 0) return iRst;
+    iRst = init_key_word(const_cast<char*>(strKeyWordDataFile.c_str()));
+    if(iRst < 0) return iRst;
+    iRst = init_focus_word(const_cast<char*>(strFocusWordDataFile.c_str()));
+    if(iRst < 0) return iRst;
 
-    init_ac_trie();
+    iRst = init_ac_trie();
+    if(iRst < 0) return iRst;
 
     return 0;
 }
@@ -834,6 +850,7 @@ int CTextProcessor::init_key_word(char *pcFileName)
     if (iReadFile.fail()) return -3;
     string strLine;
     int iRows = 0;
+    m_mapKeyWord.clear();
     while (getline(iReadFile, strLine))
     {
         if (strLine.empty())
@@ -1048,6 +1065,7 @@ int CTextProcessor::init_ignore_word(char *pcFileName)
     string strLine;
     wchar_t wcaTmp[BUFFER_LEN];
     int iLen = 0;
+    m_setIgnore.clear();
     while (getline(iReadFile, strLine))
     {
         mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
@@ -1074,6 +1092,54 @@ int CTextProcessor::filter_ignore_word(char *pcOutput, char *pcInput)
     for(int i=0; i<iLen; i++)
     {
         if(m_setIgnore.find(wcaInput[i]) != m_setIgnore.end())
+        {
+            continue;
+        }
+        wcaOutput[j] = wcaInput[i];
+        j++;
+    }
+    wcaOutput[j] = 0;
+    wcstombs(pcOutput, wcaOutput, BUFFER_LEN);
+    return 0;
+}
+
+int CTextProcessor::init_focus_word(char *pcFileName)
+{
+    if(pcFileName == NULL) return -1;
+    if(strlen(pcFileName) >= BUFFER_LEN) return -2;
+    ifstream iReadFile;
+    iReadFile.open(pcFileName, ios_base::in);
+    if(iReadFile.fail()) return -3;
+    string strLine;
+    wchar_t wcaTmp[BUFFER_LEN];
+    int iLen = 0;
+    m_setFocus.clear();
+    while (getline(iReadFile, strLine))
+    {
+        mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
+        iLen = (int)wcslen(wcaTmp);
+        for(int i=0; i<iLen; i++)
+        {
+            m_setFocus.insert(wcaTmp[i]);
+        }
+    }
+    iReadFile.close();
+    return 0;
+}
+
+int CTextProcessor::filter_not_focus_word(char *pcOutput, char *pcInput)
+{
+    if(pcOutput == NULL || pcInput == NULL) return -1;
+    if(strlen(pcInput) >= BUFFER_LEN) return -2;
+    if(m_setFocus.empty()) return -3;
+    wchar_t wcaInput[BUFFER_LEN];
+    wchar_t wcaOutput[BUFFER_LEN];
+    mbstowcs(wcaInput, pcInput, BUFFER_LEN);
+    int iLen = (int)wcslen(wcaInput);
+    int j = 0;
+    for(int i=0; i<iLen; i++)
+    {
+        if(m_setFocus.find(wcaInput[i]) == m_setFocus.end())
         {
             continue;
         }
