@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/01/20 16:04:29>
+// LastChangeTime : Time-stamp: <naturezhang 2017/06/02 12:34:51>
 // Name           : main.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -505,25 +505,123 @@ int filter_msg(char *pcFileName)
 //     return 0;
 // }
 
+// int main(int argc, char *argv[])
+// {
+//     char acInput[] = "ooxxCC%dAAAoen....END";
+//     CTextProcessor oCTextProcessor;
+//     // oCTextProcessor.init_from_configuration_file(argv[1]);
+//     // oCTextProcessor.get_sample_feature(argv[2]);
+//     // int iRst = oCTextProcessor.get_svm_predict(acInput);
+//     map<string, int> mapRst;
+//     map<string, int>::iterator iter; 
+//     oCTextProcessor.init_key_word(argv[1]);
+//     oCTextProcessor.init_ac_trie();
+//     // int iRst = oCTextProcessor.find_key_word(acInput);
+//     int iRst = oCTextProcessor.get_all_find_key_word(mapRst, acInput);
+//     cout << "src string: " << acInput << endl;
+//     cout << "iRst: "<< iRst << endl;
+//     cout << "mapRst.size(): " << mapRst.size() << endl;
+
+//     for (iter = mapRst.begin(); iter != mapRst.end(); iter ++)
+//     {
+//         cout << iter->first << " " << iter->second << endl;
+//     }
+
+    
+//     // oCTextProcessor.init_replace_data(argv[1]);
+//     // oCTextProcessor.init_common_chinese_character_data(argv[1]);
+
+//     // char acInput[] = "四五六,フⅦ我是好人8907sdwe";
+//     // char acOut[300];
+//     // wchar_t wcaInput[] = L"四五六,フⅦ我是好人";
+//     // wchar_t wcaOutput[300];
+//     // int iCommonCnt = oCTextProcessor.stat_common_chinese_character_cnt(acInput);
+//     // int iSubCommonCnt = oCTextProcessor.stat_sub_common_chinese_character_cnt(acInput);
+//     // int iNumberCnt = oCTextProcessor.stat_number_cnt(acInput);
+//     // int iAlphabetCnt = oCTextProcessor.stat_alphabet_cnt(acInput);
+//     // int iEmojiCnt = oCTextProcessor.stat_emoji_cnt(acInput);
+//     // int iSymbolCnt = oCTextProcessor.stat_symbol_cnt(acInput);
+//     // int iMsgLen = oCTextProcessor.get_msg_word_cnt(acInput);
+//     // cout << acInput << endl;
+//     // cout << iCommonCnt << endl;
+//     // cout << iSubCommonCnt << endl;
+//     // cout << iNumberCnt << endl;
+//     // cout << iAlphabetCnt << endl;
+//     // cout << iEmojiCnt << endl;
+//     // cout << iSymbolCnt << endl;
+//     // cout << iMsgLen << endl;
+    
+//     // oCTextProcessor.replace_word(wcaOutput, wcaInput);
+//     // printf("%ls\n", wcaInput);
+//     // printf("%ls\n", wcaOutput);
+//     // oCTextProcessor.replace_word(acOut, acInput);
+//     // cout << acInput << endl;
+//     // cout << acOut << endl;
+//     // oCTextProcessor.init_key_word(argv[1]);
+//     // map<int, string>::iterator iter;
+//     // for (iter=oCTextProcessor.m_mapKeyWord.begin(); iter!=oCTextProcessor.m_mapKeyWord.end(); iter++)
+//     // {
+//     //     cout << iter->first << "    " << iter->second << endl;
+//     // }
+//     // oCTextProcessor.init_ac_trie();
+//     // struct TireNode stTireNode;
+//     // cout << stTireNode.wcWord << endl;
+//     // cout << stTireNode.iFailPoint << endl;
+//     // cout << stTireNode.iKeyWordIndex << endl;
+//     // cout << stTireNode.mapNext.size() << endl;
+    
+//     cout << "finish!" << endl;
+
+    
+//     return 0;
+// }
+
+// int main(int argc, char *argv[])
+// {
+//     cout << "file name: " << argv[1] << endl;
+//     ifstream ifFILE;
+//     ifFILE.open(argv[1], ios_base::in);
+//     if (ifFILE.fail()) return -1;
+//     CTextProcessor oCTextProcessor;
+//     oCTextProcessor.init_from_configuration_file(argv[2]);
+//     char acReplaced[1024];
+//     char acFilterIgnore[1024];
+//     int iRst = 0;
+//     string strLine;
+//     while (getline(ifFILE, strLine))
+//     {
+//         cout << "*********************************" << endl;
+//         cout << strLine << endl;
+//         oCTextProcessor.replace_word(acReplaced,const_cast<char*>(strLine.c_str()));
+//         iRst = oCTextProcessor.filter_ignore_word(acFilterIgnore, acReplaced);
+//         cout << acReplaced << endl;
+//         cout << acFilterIgnore << endl;
+//         iRst = oCTextProcessor.find_key_word(acReplaced);
+//         if(iRst == 1)
+//         {
+//             cout << "++++++++: "; 
+//             cout << strLine << endl;
+//         }
+//     }
+//     ifFILE.close();
+//     return 0;
+//
+
 int main(int argc, char *argv[])
 {
+    if(argc != 3) return -2;
+    int iRst = 0;
     CTextProcessor oCTextProcessor;
-    oCTextProcessor.init_key_word(argv[1]);
-    // map<int, string>::iterator iter;
-    // for (iter=oCTextProcessor.m_mapKeyWord.begin(); iter!=oCTextProcessor.m_mapKeyWord.end(); iter++)
-    // {
-    //     cout << iter->first << "    " << iter->second << endl;
-    // }
-    oCTextProcessor.init_ac_trie();
-    // struct TireNode stTireNode;
-    // cout << stTireNode.wcWord << endl;
-    // cout << stTireNode.iFailPoint << endl;
-    // cout << stTireNode.iKeyWordIndex << endl;
-    // cout << stTireNode.mapNext.size() << endl;
-    
-    cout << "finish!" << endl;
-
-    
+    iRst = oCTextProcessor.init_from_configuration_file(argv[1]);
+    if(iRst < 0)
+    {
+        cout << "error: init config file failed! error code: " << iRst << endl;
+        return -1;
+    }
+    cout << "paramter 2 is: " << argv[2] << endl;
+    char acOut[1024];
+    oCTextProcessor.filter_not_focus_word(acOut, argv[2]);
+    cout << "output: " << acOut << endl;
+    cout << "finish" << endl;
     return 0;
 }
-
