@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/05/08 00:03:30>
+// LastChangeTime : Time-stamp: <naturezhang 2017/06/02 12:23:02>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -405,10 +405,10 @@ int CTextProcessor::init_common_chinese_character_data(char *pcFileName)
 int CTextProcessor::init_sub_common_chinese_character_data(char *pcFileName)
 {
     if (pcFileName == NULL) return -1;
-    if (strlen(pcFileName) >= BUFFER_LEN) return -1;
+    if (strlen(pcFileName) >= BUFFER_LEN) return -2;
     ifstream iReadFile;
     iReadFile.open(pcFileName, ios_base::in);
-    if (iReadFile.fail()) return -1;
+    if (iReadFile.fail()) return -3;
     string strLine;
     wchar_t wcaTmp[BUFFER_LEN];
     m_setSubCommonChineseCharacter.clear();
@@ -811,32 +811,45 @@ int CTextProcessor::init_from_configuration_file(char *pcFileName)
     oNZconfig.get_config_value("STR_KEY_WORD_DATA_FILE", strKeyWordDataFile);
     oNZconfig.get_config_value("STR_FOCUS_WORD_DATA_FILE", strFocusWordDataFile);
 
+    // 打印配置文件路径
+    cout << "STR_REPLACE_DATA_FILE:" << strReplaceDataFile << endl;
+    cout << "STR_COMMON_CHINESE_CHARACTER_DATA_FILE:" << strCommonChineseCharacterDataFile << endl;
+    cout << "STR_SUB_COMMON_CHINESE_CHARACTER_DATA_FILE:" << strSubCommonChineseCharacterDataFile << endl;
+    cout << "STR_NUMBER_DATA_FILE:" << strNumberDataFile << endl;
+    cout << "STR_ALPHABET_DATA_FILE:" << strAlphabetDataFile << endl;
+    cout << "STR_EMOJI_DATA_FILE:" << strEmojiDataFile << endl;
+    cout << "STR_SYMBOL_DATA_FILE:" << strSymbolDataFile << endl;
+    cout << "STR_SVMMODEL_DATA_FILE:" << strSvmModelDataFile << endl;
+    cout << "STR_IGNORE_DATA_FILE:" << strIgnoreDataFile << endl;
+    cout << "STR_KEY_WORD_DATA_FILE:" << strKeyWordDataFile << endl;
+    cout << "STR_FOCUS_WORD_DATA_FILE:" << strFocusWordDataFile << endl;
+
     int iRst = 0;
     iRst = init_replace_data(const_cast<char*>(strReplaceDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -1;
     iRst = init_common_chinese_character_data(const_cast<char*>(strCommonChineseCharacterDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -2;
     iRst = init_sub_common_chinese_character_data(const_cast<char*>(strSubCommonChineseCharacterDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -3;
     iRst = init_number_data(const_cast<char*>(strNumberDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -4;
     iRst = init_alphabet_data(const_cast<char*>(strAlphabetDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -5;
     iRst = init_emoji_data(const_cast<char*>(strEmojiDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -6;
     iRst = init_symbol_data(const_cast<char*>(strSymbolDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -7;
     iRst = init_svm_model(const_cast<char*>(strSvmModelDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -8;
     iRst = init_ignore_word(const_cast<char*>(strIgnoreDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -9;
     iRst = init_key_word(const_cast<char*>(strKeyWordDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -10;
     iRst = init_focus_word(const_cast<char*>(strFocusWordDataFile.c_str()));
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -11;
 
     iRst = init_ac_trie();
-    if(iRst < 0) return iRst;
+    if(iRst < 0) return -12;
 
     return 0;
 }
