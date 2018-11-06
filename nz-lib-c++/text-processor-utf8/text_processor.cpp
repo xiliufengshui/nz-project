@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2018/11/06 19:08:12>
+// LastChangeTime : Time-stamp: <naturezhang 2018/11/06 20:43:18>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -1212,6 +1212,8 @@ int CTextProcessor::translate_word_to_pinyin(char *pcOutput, char *pcInput)
     if (m_mapPinYin.empty()) return -3;
     wchar_t wcaInput[BUFFER_LEN];
     wchar_t wcaOutput[BUFFER_LEN];
+    memset(wcaInput, 0, sizeof(wcaInput));
+    memset(wcaOutput, 0, sizeof(wcaOutput));
     mbstowcs(wcaInput, pcInput, BUFFER_LEN);
     int iLen = (int)wcslen(wcaInput);
     wstring wstrTmp;
