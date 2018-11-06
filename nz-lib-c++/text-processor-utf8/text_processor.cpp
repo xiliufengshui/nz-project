@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <Administrator 2018/11/05 21:15:19>
+// LastChangeTime : Time-stamp: <naturezhang 2018/11/06 19:08:12>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -1195,7 +1195,7 @@ int CTextProcessor::init_pinyin_word(char *pcFileName)
         mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
         wstring wstrTmp(wcaTmp);
         wstring::size_type iPos;
-        iPos = wstrTmp.find('\t');
+        iPos = wstrTmp.find(' ');
         if(iPos == wstrTmp.npos)
         {
             continue;
