@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/06/02 12:34:51>
+// LastChangeTime : Time-stamp: <Administrator 2018/11/05 21:13:18>
 // Name           : main.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -609,19 +609,28 @@ int filter_msg(char *pcFileName)
 
 int main(int argc, char *argv[])
 {
-    if(argc != 3) return -2;
+    // if(argc != 3) return -2;
     int iRst = 0;
     CTextProcessor oCTextProcessor;
-    iRst = oCTextProcessor.init_from_configuration_file(argv[1]);
-    if(iRst < 0)
-    {
-        cout << "error: init config file failed! error code: " << iRst << endl;
-        return -1;
-    }
-    cout << "paramter 2 is: " << argv[2] << endl;
-    char acOut[1024];
-    oCTextProcessor.filter_not_focus_word(acOut, argv[2]);
-    cout << "output: " << acOut << endl;
-    cout << "finish" << endl;
+    oCTextProcessor.init_pinyin_word("./corpus/pinyin_utf8.txt");
+    char pcOutput[BUFFER_LEN];
+    oCTextProcessor.translate_word_to_pinyin(pcOutput, "你好吗");
+    cout<< "pcOutPut: " << pcOutput << endl;
+    // oCTextProcessor.test_print_pinyin();
+    // cout << oCTextProcessor.init_regular_expression("./corpus/regular_expression_utf8.txt") << endl;
+    // cout << "test: " << oCTextProcessor.match_regular_expression("23423123") << endl;
+    // cout << "test: " << oCTextProcessor.match_regular_expression("343345345") << endl;
+    
+    // iRst = oCTextProcessor.init_from_configuration_file(argv[1]);
+    // if(iRst < 0)
+    // {
+    //     cout << "error: init config file failed! error code: " << iRst << endl;
+    //     return -1;
+    // }
+    // cout << "paramter 2 is: " << argv[2] << endl;
+    // char acOut[1024];
+    // oCTextProcessor.filter_not_focus_word(acOut, argv[2]);
+    // cout << "output: " << acOut << endl;
+    // cout << "finish" << endl;
     return 0;
 }

@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/05/07 23:36:57>
+// LastChangeTime : Time-stamp: <Administrator 2018/11/05 20:26:51>
 // Name           : text_processor.h
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -22,6 +22,8 @@
 #include <string.h>
 #include <unistd.h>
 #include "svm.h"
+#include <regex.h>             /* 使用c的正则，原因速度最快 对比 c++ 、boost  */
+#include <vector>
 
 using namespace std;
 
@@ -94,6 +96,12 @@ public:
     int init_focus_word(char *pcFileName); /* 加载需要保留的字 */
     int filter_not_focus_word(char *pcOutput, char *pcInput); /* 过滤不关心的字 */
 
+    int init_pinyin_word(char *pcFileName); /* 加载汉字拼音对照表 */
+    int translate_word_to_pinyin(char *pcOutput, char *pcInput); /* 翻译为拼音 */
+
+    int init_regular_expression(char *pcFileName); /* 加载正则表达式 */
+    int match_regular_expression(char *pcInput);   /* 匹配正则表达式 0：匹配 非0:不匹配 */
+
 private:
     int stat_word_cnt(char *pcInput, set<wchar_t> &m_set);
     
@@ -106,6 +114,8 @@ private:
     set<wchar_t> m_setSymbol;
     set<wchar_t> m_setIgnore;
     set<wchar_t> m_setFocus;
+    map<wchar_t, wstring> m_mapPinYin;
+    vector<string> m_vecRegularExpression;
     
     struct svm_model* m_pSvmModel;
 

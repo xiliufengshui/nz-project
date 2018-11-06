@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2017/06/02 12:23:02>
+// LastChangeTime : Time-stamp: <Administrator 2018/11/05 21:15:19>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -796,6 +796,8 @@ int CTextProcessor::init_from_configuration_file(char *pcFileName)
     string strIgnoreDataFile;
     string strKeyWordDataFile;
     string strFocusWordDataFile;
+    string strPinYinDataFile;
+    string strRegularExpressionDataFile;
     
     NZconfig oNZconfig;
     oNZconfig.read_config_file(pcFileName);
@@ -810,6 +812,8 @@ int CTextProcessor::init_from_configuration_file(char *pcFileName)
     oNZconfig.get_config_value("STR_IGNORE_DATA_FILE", strIgnoreDataFile);
     oNZconfig.get_config_value("STR_KEY_WORD_DATA_FILE", strKeyWordDataFile);
     oNZconfig.get_config_value("STR_FOCUS_WORD_DATA_FILE", strFocusWordDataFile);
+    oNZconfig.get_config_value("STR_PINYIN_DATA_FILE", strPinYinDataFile);
+    oNZconfig.get_config_value("STR_REGULAR_EXPRESSION_DATA_FILE", strRegularExpressionDataFile);
 
     // 打印配置文件路径
     cout << "STR_REPLACE_DATA_FILE:" << strReplaceDataFile << endl;
@@ -823,6 +827,8 @@ int CTextProcessor::init_from_configuration_file(char *pcFileName)
     cout << "STR_IGNORE_DATA_FILE:" << strIgnoreDataFile << endl;
     cout << "STR_KEY_WORD_DATA_FILE:" << strKeyWordDataFile << endl;
     cout << "STR_FOCUS_WORD_DATA_FILE:" << strFocusWordDataFile << endl;
+    cout << "STR_PINYIN_DATA_FILE:" << strPinYinDataFile << endl;
+    cout << "STR_REGULAR_EXPRESSION_DATA_FILE:" << strRegularExpressionDataFile << endl;
 
     int iRst = 0;
     iRst = init_replace_data(const_cast<char*>(strReplaceDataFile.c_str()));
@@ -850,6 +856,12 @@ int CTextProcessor::init_from_configuration_file(char *pcFileName)
 
     iRst = init_ac_trie();
     if(iRst < 0) return -12;
+
+    iRst = init_pinyin_word(const_cast<char*>(strPinYinDataFile.c_str()));
+    if(iRst < 0) return -13;
+
+    iRst = init_regular_expression(const_cast<char*>(strRegularExpressionDataFile.c_str()));
+    if(iRst < 0) return -14;
 
     return 0;
 }
@@ -1161,5 +1173,113 @@ int CTextProcessor::filter_not_focus_word(char *pcOutput, char *pcInput)
     }
     wcaOutput[j] = 0;
     wcstombs(pcOutput, wcaOutput, BUFFER_LEN);
+    return 0;
+}
+
+int CTextProcessor::init_pinyin_word(char *pcFileName)
+{
+    if(pcFileName == NULL) return -1;
+    if(strlen(pcFileName) >= BUFFER_LEN) return -2;
+    ifstream iReadFile;
+    iReadFile.open(pcFileName, ios_base::in);
+    if(iReadFile.fail()) return -3;
+    string strLine;
+    wchar_t wcaTmp[BUFFER_LEN];
+    m_mapPinYin.clear();
+    while (getline(iReadFile, strLine))
+    {
+        if(strLine.length() >= BUFFER_LEN)
+        {
+            continue;
+        }
+        mbstowcs(wcaTmp, strLine.c_str(), BUFFER_LEN);
+        wstring wstrTmp(wcaTmp);
+        wstring::size_type iPos;
+        iPos = wstrTmp.find('\t');
+        if(iPos == wstrTmp.npos)
+        {
+            continue;
+        }
+        m_mapPinYin[wcaTmp[0]] = wstrTmp.substr(iPos+1);
+    }
+    return 0;
+}
+
+int CTextProcessor::translate_word_to_pinyin(char *pcOutput, char *pcInput)
+{
+    if (pcInput == NULL) return -1;
+    if (strlen(pcInput) >= MSG_MAX_LEN) return -2;
+    if (m_mapPinYin.empty()) return -3;
+    wchar_t wcaInput[BUFFER_LEN];
+    wchar_t wcaOutput[BUFFER_LEN];
+    mbstowcs(wcaInput, pcInput, BUFFER_LEN);
+    int iLen = (int)wcslen(wcaInput);
+    wstring wstrTmp;
+    wstrTmp.clear();
+    for (int i=0; i < iLen; i++)
+    {
+        if(m_mapPinYin.find(wcaInput[i]) == m_mapPinYin.end())
+        {
+            wstrTmp += wcaInput[i];
+        }
+        else
+        {
+            wstrTmp += L" ";
+            wstrTmp += m_mapPinYin[wcaInput[i]];
+            wstrTmp += L" ";
+        }
+    }
+    if(wstrTmp.length() >= BUFFER_LEN) return -4;
+    wcsncpy(wcaOutput, wstrTmp.c_str(), wstrTmp.length());
+    wcstombs(pcOutput, wcaOutput, BUFFER_LEN);
+    return 0;
+}
+
+int CTextProcessor::init_regular_expression(char *pcFileName)
+{
+    if(pcFileName == NULL) return -1;
+    if(strlen(pcFileName) >= BUFFER_LEN) return -2;
+    ifstream iReadFile;
+    iReadFile.open(pcFileName, ios_base::in);
+    if(iReadFile.fail()) return -3;
+    string strLine;
+    m_vecRegularExpression.clear();
+    while (getline(iReadFile, strLine))
+    {
+        m_vecRegularExpression.push_back(strLine);
+    }
+    return 0;
+}
+
+int CTextProcessor::match_regular_expression(char *pcInput)
+{
+    if (pcInput == NULL) return -1;
+    if (strlen(pcInput) >= MSG_MAX_LEN) return -2;
+    bool bIsMatch = false;
+    vector<string>::iterator iter;
+    for(iter=m_vecRegularExpression.begin(); iter!=m_vecRegularExpression.end(); iter++)
+    {
+        regex_t reg;
+        // 共有如下四种编译模式：
+        // REG_EXTENDED：使用功能更强大的扩展正则表达式
+        // REG_ICASE：忽略大小写
+        // REG_NOSUB：不用存储匹配后的结果(ps:提升性能)
+        // REG_NEWLINE：识别换行符，这样‘$’就可以从行尾开始匹配，‘^’就可以从行的开头开始匹配。否则忽略换行符，把整个文本串当做一个字符串处理。
+        regcomp(&reg, (*iter).c_str(), REG_EXTENDED|REG_NOSUB);
+        int iRst = 0;
+        const size_t nmatch = 1;
+        regmatch_t pmatch[1];
+        iRst = regexec(&reg, pcInput, nmatch, pmatch, 0);
+        regfree(&reg);
+        if(iRst == 0)
+        {
+            bIsMatch = true;
+            break;
+        }
+    }
+    if(bIsMatch == false)
+    {
+        return -3;
+    }
     return 0;
 }
