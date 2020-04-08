@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <Administrator 2018/11/05 21:13:18>
+// LastChangeTime : Time-stamp: <naturezhang 2020/04/08 01:09:32>
 // Name           : main.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -616,6 +616,7 @@ int main(int argc, char *argv[])
     char pcOutput[BUFFER_LEN];
     oCTextProcessor.translate_word_to_pinyin(pcOutput, "你好吗");
     cout<< "pcOutPut: " << pcOutput << endl;
+    
     // oCTextProcessor.test_print_pinyin();
     // cout << oCTextProcessor.init_regular_expression("./corpus/regular_expression_utf8.txt") << endl;
     // cout << "test: " << oCTextProcessor.match_regular_expression("23423123") << endl;
