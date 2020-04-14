@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <Administrator 2018/11/05 20:26:51>
+// LastChangeTime : Time-stamp: <naturezhang 2020/04/15 00:25:05>
 // Name           : text_processor.h
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -21,14 +21,14 @@
 #include <locale.h>
 #include <string.h>
 #include <unistd.h>
-#include "svm.h"
 #include <regex.h>             /* 使用c的正则，原因速度最快 对比 c++ 、boost  */
 #include <vector>
 
 using namespace std;
 
-#define BUFFER_LEN 1024
-#define MSG_MAX_LEN 10000
+#define BUFFER_LEN 60240
+#define MSG_MAX_LEN 60000
+#define FILE_NAME_LEN 1024
 
 struct TrieNode
 {
@@ -52,13 +52,6 @@ public:
     int replace_word(wchar_t *pwcOutput, wchar_t *pwcInput);
     int replace_word(char *pcOutput, char *pcInput);
     
-    int single_word_stat(char *pcFileName);
-    int before_word_stat(char *pcFileName);
-    int next_word_stat(char *pcFileName);
-    int get_all_stat(char *pcFileName);
-    int stat_msg_length(char *pcFileName);
-    int tag_msg_length(char *pcFileName);
-    
     int init_common_chinese_character_data(char *pcFileName); /* 初始化常用汉字数据 */
     int init_sub_common_chinese_character_data(char *pcFileName); /* 初始化次常用汉字数据 */
     int init_number_data(char *pcFileName);
@@ -75,12 +68,7 @@ public:
 
     int get_msg_word_cnt(char *pcInput);
 
-    int init_svm_model(char *pcFileName);
-    double get_svm_predict(char *pcInput);
-    int get_feature(double adFeatureVector[], char *pcInput);
-    int get_sample_feature(char *pcFileName);
-
-    int init_from_configuration_file(char *pcFileName);
+    int init_corpus(char *pcFilePath);
     
     int init_key_word(char *pcFileName);
     int init_ac_trie();
@@ -117,8 +105,6 @@ private:
     map<wchar_t, wstring> m_mapPinYin;
     vector<string> m_vecRegularExpression;
     
-    struct svm_model* m_pSvmModel;
-
     map<int, string> m_mapKeyWord; /* 关键词 */
     map<int, struct TrieNode> m_mapAcTrie; /* AC 自动机 trie树 */
 
