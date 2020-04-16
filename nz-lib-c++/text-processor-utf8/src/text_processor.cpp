@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2020/04/17 01:18:42>
+// LastChangeTime : Time-stamp: <naturezhang 2020/04/17 02:03:07>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -10,6 +10,8 @@
 
 
 #include "text_processor.h"
+
+using namespace std;
 
 CTextProcessor::CTextProcessor()
 {

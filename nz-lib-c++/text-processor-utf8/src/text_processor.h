@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2020/04/15 00:25:05>
+// LastChangeTime : Time-stamp: <naturezhang 2020/04/17 02:04:37>
 // Name           : text_processor.h
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -24,7 +24,7 @@
 #include <regex.h>             /* 使用c的正则，原因速度最快 对比 c++ 、boost  */
 #include <vector>
 
-using namespace std;
+
 
 #define BUFFER_LEN 60240
 #define MSG_MAX_LEN 60000
@@ -32,7 +32,7 @@ using namespace std;
 
 struct TrieNode
 {
-    map<wchar_t, int> mapNext;
+    std::map<wchar_t, int> mapNext;
     int iFailPoint;
     int iKeyWordIndex;
     TrieNode(){
@@ -74,7 +74,7 @@ public:
     int init_ac_trie();
 
     /* mspRst 返回命中关键词和命中该关键词的次数 */
-    int get_all_find_key_word(map<string, int> &mapRst , char *pcInput);
+    int get_all_find_key_word(std::map<std::string, int> &mapRst , char *pcInput);
     /* 命中关键词即返回 1:命中 0:未命中 */
     int find_key_word(char *pcInput);
 
@@ -91,22 +91,22 @@ public:
     int match_regular_expression(char *pcInput);   /* 匹配正则表达式 0：匹配 非0:不匹配 */
 
 private:
-    int stat_word_cnt(char *pcInput, set<wchar_t> &m_set);
+    int stat_word_cnt(char *pcInput, std::set<wchar_t> &m_set);
     
-    map<wchar_t, wchar_t> m_mapReplace;
-    set<wchar_t> m_setCommonChineseCharacter;
-    set<wchar_t> m_setSubCommonChineseCharacter;
-    set<wchar_t> m_setNumber;
-    set<wchar_t> m_setAlphabet;
-    set<wchar_t> m_setEmoji;
-    set<wchar_t> m_setSymbol;
-    set<wchar_t> m_setIgnore;
-    set<wchar_t> m_setFocus;
-    map<wchar_t, wstring> m_mapPinYin;
-    vector<string> m_vecRegularExpression;
+    std::map<wchar_t, wchar_t> m_mapReplace;
+    std::set<wchar_t> m_setCommonChineseCharacter;
+    std::set<wchar_t> m_setSubCommonChineseCharacter;
+    std::set<wchar_t> m_setNumber;
+    std::set<wchar_t> m_setAlphabet;
+    std::set<wchar_t> m_setEmoji;
+    std::set<wchar_t> m_setSymbol;
+    std::set<wchar_t> m_setIgnore;
+    std::set<wchar_t> m_setFocus;
+    std::map<wchar_t, std::wstring> m_mapPinYin;
+    std::vector<std::string> m_vecRegularExpression;
     
-    map<int, string> m_mapKeyWord; /* 关键词 */
-    map<int, struct TrieNode> m_mapAcTrie; /* AC 自动机 trie树 */
+    std::map<int, std::string> m_mapKeyWord; /* 关键词 */
+    std::map<int, struct TrieNode> m_mapAcTrie; /* AC 自动机 trie树 */
 
 };
 
