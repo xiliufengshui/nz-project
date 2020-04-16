@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2020/04/15 01:20:50>
+// LastChangeTime : Time-stamp: <naturezhang 2020/04/17 01:18:42>
 // Name           : text_processor.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -34,8 +34,7 @@ int CTextProcessor::init_replace_data(char *pcDataFileName)
     m_mapReplace.clear();
     while (getline(iReadFile, strLine))
     {
-        mbstowcs(wcaTmp, strLine.c_str(), 4);
-        if (wcslen(wcaTmp) == 2)
+        if (2 == mbstowcs(wcaTmp, strLine.c_str(), 4))
         {
             m_mapReplace[wcaTmp[0]] = wcaTmp[1];
         }
@@ -84,8 +83,7 @@ int CTextProcessor::replace_word(char *pcOutput, char *pcInput)
     if (strlen(pcInput) >= BUFFER_LEN) return -3;
     wchar_t wcaInput[BUFFER_LEN];
     wchar_t wcaOutput[BUFFER_LEN];
-    mbstowcs(wcaInput, pcInput, BUFFER_LEN);
-    int iLen = (int)wcslen(wcaInput);
+    int iLen = mbstowcs(wcaInput, pcInput, (BUFFER_LEN - 1));
     int i = 0;
     for (i=0; i<iLen; i++)
     {
@@ -239,15 +237,11 @@ int CTextProcessor::init_symbol_data(char *pcFileName)
 int CTextProcessor::stat_word_cnt(char *pcInput, set<wchar_t> &m_set)
 {
     wchar_t wcaTmp[BUFFER_LEN];
-    mbstowcs(wcaTmp, pcInput, BUFFER_LEN);
-    int iLen = (int)wcslen(wcaTmp);
-    int i = 0;
-    set<wchar_t>::iterator iter;
+    int iLen = mbstowcs(wcaTmp, pcInput, (BUFFER_LEN - 1));
     int iStatCnt = 0;
-    for (i=0; i<iLen; i++)
+    for (int i=0; i<iLen; i++)
     {
-        iter = m_set.find(wcaTmp[i]);
-        if (iter != m_set.end())
+        if (m_set.find(wcaTmp[i]) != m_set.end())
         {
             iStatCnt ++;
         }
@@ -258,7 +252,7 @@ int CTextProcessor::stat_word_cnt(char *pcInput, set<wchar_t> &m_set)
 int CTextProcessor::stat_common_chinese_character_cnt(char *pcInput)
 {
     if (pcInput == NULL) return -1;
-    if (strlen(pcInput) >= BUFFER_LEN) return -2;
+    if (strlen(pcInput) >= FILE_NAME_LEN) return -2;
     if (m_setCommonChineseCharacter.empty()) return -3;
     int iStatCnt = stat_word_cnt(pcInput, m_setCommonChineseCharacter);
     return iStatCnt;
@@ -268,7 +262,7 @@ int CTextProcessor::stat_common_chinese_character_cnt(char *pcInput)
 int CTextProcessor::stat_sub_common_chinese_character_cnt(char *pcInput)
 {
     if (pcInput == NULL) return -1;
-    if (strlen(pcInput) >= BUFFER_LEN) return -2;
+    if (strlen(pcInput) >= FILE_NAME_LEN) return -2;
     if (m_setSubCommonChineseCharacter.empty()) return -3;
     int iStatCnt = stat_word_cnt(pcInput, m_setSubCommonChineseCharacter);
     return iStatCnt;
@@ -277,7 +271,7 @@ int CTextProcessor::stat_sub_common_chinese_character_cnt(char *pcInput)
 int CTextProcessor::stat_number_cnt(char *pcInput)
 {
     if (pcInput == NULL) return -1;
-    if (strlen(pcInput) >= BUFFER_LEN) return -2;
+    if (strlen(pcInput) >= FILE_NAME_LEN) return -2;
     if (m_setNumber.empty()) return -3;
     int iStatCnt = stat_word_cnt(pcInput, m_setNumber);
     return iStatCnt;
@@ -286,7 +280,7 @@ int CTextProcessor::stat_number_cnt(char *pcInput)
 int CTextProcessor::stat_alphabet_cnt(char *pcInput)
 {
     if (pcInput == NULL) return -1;
-    if (strlen(pcInput) >= BUFFER_LEN) return -2;
+    if (strlen(pcInput) >= FILE_NAME_LEN) return -2;
     if (m_setAlphabet.empty()) return -3;
     int iStatCnt = stat_word_cnt(pcInput, m_setAlphabet);
     return iStatCnt;
@@ -295,7 +289,7 @@ int CTextProcessor::stat_alphabet_cnt(char *pcInput)
 int CTextProcessor::stat_emoji_cnt(char *pcInput)
 {
     if (pcInput == NULL) return -1;
-    if (strlen(pcInput) >= BUFFER_LEN) return -2;
+    if (strlen(pcInput) >= FILE_NAME_LEN) return -2;
     if (m_setEmoji.empty()) return -3;
     int iStatCnt = stat_word_cnt(pcInput, m_setEmoji);
     return iStatCnt;
@@ -304,7 +298,7 @@ int CTextProcessor::stat_emoji_cnt(char *pcInput)
 int CTextProcessor::stat_symbol_cnt(char *pcInput)
 {
     if (pcInput == NULL) return -1;
-    if (strlen(pcInput) >= BUFFER_LEN) return -2;
+    if (strlen(pcInput) >= FILE_NAME_LEN) return -2;
     if (m_setSymbol.empty()) return -3;
     int iStatCnt = stat_word_cnt(pcInput, m_setSymbol);
     return iStatCnt;
@@ -313,16 +307,15 @@ int CTextProcessor::stat_symbol_cnt(char *pcInput)
 int CTextProcessor::get_msg_word_cnt(char *pcInput)
 {
     if (pcInput == NULL) return -1;
-    if (strlen(pcInput) >= BUFFER_LEN) return -2;
+    if (strlen(pcInput) >= FILE_NAME_LEN) return -2;
     wchar_t wcaTmp[BUFFER_LEN];
-    mbstowcs(wcaTmp, pcInput, BUFFER_LEN);
-    return (int)wcslen(wcaTmp);
+    return (int)mbstowcs(wcaTmp, pcInput, (BUFFER_LEN - 1));
 }
 
 int CTextProcessor::init_corpus(char *pcFilePath)
 {
     if (pcFilePath == NULL) return -1;
-    if (strlen(pcFilePath) >= BUFFER_LEN) return -2;
+    if (strlen(pcFilePath) >= FILE_NAME_LEN) return -2;
     string strFilePath(pcFilePath);
 
     string strReplaceDataFile = strFilePath + "/replace_data_utf8.txt";
@@ -413,7 +406,7 @@ int CTextProcessor::init_ac_trie()
         int iKeyWordIndex = iter->first;
         string strKeyWord = iter->second;
         int iPreTreePoint = iRootTreePoint;
-        mbstowcs(wcaTmp, strKeyWord.c_str(), BUFFER_LEN);
+        mbstowcs(wcaTmp, strKeyWord.c_str(), (BUFFER_LEN - 1));
         if (strKeyWord.size() >= BUFFER_LEN)
         {
             printf("waring: keyword too long [ %s ]", strKeyWord.c_str());
@@ -511,13 +504,11 @@ int CTextProcessor::get_all_find_key_word(map<string, int> &mapRst , char *pcInp
     if (m_mapAcTrie.empty()) return -3;
     if (m_mapKeyWord.empty()) return -4;
     wchar_t wcaTmp[MSG_MAX_LEN];
-    mbstowcs(wcaTmp, pcInput, MSG_MAX_LEN);
-    int iLen = (int)wcslen(wcaTmp);
-    int i = 0;
+    int iLen = mbstowcs(wcaTmp, pcInput, (MSG_MAX_LEN - 1));
     int iRootTreePoint = 0;
     int iCurPoint = iRootTreePoint;
     map<wchar_t, int>::iterator iter;
-    for (i=0; i<iLen; i++)
+    for (int i=0; i<iLen; i++)
     {
         while (1)
         {
@@ -551,13 +542,11 @@ int CTextProcessor::find_key_word(char *pcInput)
     if (strlen(pcInput) >= MSG_MAX_LEN) return -2;
     if (m_mapAcTrie.empty()) return -3;
     wchar_t wcaTmp[MSG_MAX_LEN];
-    mbstowcs(wcaTmp, pcInput, MSG_MAX_LEN);
-    int iLen = (int)wcslen(wcaTmp);
-    int i = 0;
+    int iLen = mbstowcs(wcaTmp, pcInput, (MSG_MAX_LEN - 1));
     int iRootTreePoint = 0;
     int iCurPoint = iRootTreePoint;
     map<wchar_t, int>::iterator iter;
-    for (i=0; i<iLen; i++)
+    for (int i=0; i<iLen; i++)
     {
         while (1)
         {
@@ -615,8 +604,7 @@ int CTextProcessor::filter_ignore_word(char *pcOutput, char *pcInput)
     if(m_setIgnore.empty()) return -3;
     wchar_t wcaInput[BUFFER_LEN];
     wchar_t wcaOutput[BUFFER_LEN];
-    mbstowcs(wcaInput, pcInput, BUFFER_LEN);
-    int iLen = (int)wcslen(wcaInput);
+    int iLen = mbstowcs(wcaInput, pcInput, (BUFFER_LEN - 1));
     int j = 0;
     for(int i=0; i<iLen; i++)
     {
@@ -661,8 +649,7 @@ int CTextProcessor::filter_not_focus_word(char *pcOutput, char *pcInput)
     if(m_setFocus.empty()) return -3;
     wchar_t wcaInput[BUFFER_LEN];
     wchar_t wcaOutput[BUFFER_LEN];
-    mbstowcs(wcaInput, pcInput, BUFFER_LEN);
-    int iLen = (int)wcslen(wcaInput);
+    int iLen = mbstowcs(wcaInput, pcInput, (BUFFER_LEN - 1));
     int j = 0;
     for(int i=0; i<iLen; i++)
     {
@@ -712,8 +699,7 @@ int CTextProcessor::translate_word_to_pinyin(char *pcOutput, char *pcInput)
     wchar_t wcaOutput[BUFFER_LEN];
     memset(wcaInput, 0, sizeof(wcaInput));
     memset(wcaOutput, 0, sizeof(wcaOutput));
-    mbstowcs(wcaInput, pcInput, BUFFER_LEN);
-    int iLen = (int)wcslen(wcaInput);
+    int iLen = mbstowcs(wcaInput, pcInput, (BUFFER_LEN - 1));
     wstring wstrTmp;
     wstrTmp.clear();
     for (int i=0; i < iLen; i++)

@@ -1,5 +1,5 @@
 //============================================================================
-// LastChangeTime : Time-stamp: <naturezhang 2020/04/15 01:16:25>
+// LastChangeTime : Time-stamp: <naturezhang 2020/04/17 01:41:27>
 // Name           : main.cpp
 // Version        : 1.0
 // Copyright      : 裸奔的鸡蛋
@@ -130,10 +130,22 @@ int main(int argc, char *argv[])
     CTextProcessor oCTextProcessor;
     int iRst = oCTextProcessor.init_corpus("../conf/corpus");
     cout << "iRst: " << iRst << endl;
-    
+
+    map<string, int> mapRst;
     // oCTextProcessor.init_pinyin_word("./corpus/pinyin_utf8.txt");
     char pcOutput[BUFFER_LEN];
-    oCTextProcessor.translate_word_to_pinyin(pcOutput, "你好吗");
+    int iCnt = oCTextProcessor.get_all_find_key_word(mapRst, "一二三mmnfammsf你裸聊好吗");
+    cout << "iCnt:" << iCnt << endl;
+
+
+    std::map<string, int>::iterator iter;
+    for(iter = mapRst.begin(); iter!=mapRst.end(); iter++)
+    {
+        cout << "first:" << iter->first << endl;
+        cout << "second:" << iter->second << endl;
+    }
+
+    // oCTextProcessor.translate_word_to_pinyin(pcOutput, "你好吗");
     cout<< "pcOutPut: " << pcOutput << endl;
     
     // oCTextProcessor.test_print_pinyin();
