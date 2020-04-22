@@ -11,8 +11,6 @@ message(STATUS "project binary: " ${PROJECT_BINARY_DIR})
 # message(STATUS "opencv libs: " ${OpenCV_LIBS})
 
 # 定义变量
-# set (DIR_HEAD_ZJ /root/Desktop/get_image/opencv3.1/include/)
-# set (DIR_LIB_ZJ /root/Desktop/get_image/opencv3.1/lib)
 # set (LIB_ZJ opencv_calib3d )
 
 # set(CMAKE_BUILD_TYPE "Debug")
@@ -22,7 +20,10 @@ message(STATUS "project binary: " ${PROJECT_BINARY_DIR})
 set (NZ_BIN_OUTPUT test.out)
 set (NZ_DIR_SRC ../src)
 set (EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../bin)
+set (LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../lib)
 
+# 编译选项
+add_compile_options(-fPIC)
 
 # 查找目录下的所有源文件
 foreach (SUB_DIR ${NZ_DIR_SRC})
@@ -42,10 +43,13 @@ message("----------------------------------------------------")
 # 生成链接库
 # add_library (MathFunctions ${DIR_LIB_SRCS})
 
+# 生成链接
+set (LIB_SRC ${PROJECT_SOURCE_DIR}/../src/text_processor.cpp)
+ADD_LIBRARY (text_processor STATIC ${LIB_SRC})
+
 # 链接
 # include_directories (${DIR_HEAD})
 # link_directories (${DIR_LIB})
-
 
 # 指定生成目标
 add_executable(${NZ_BIN_OUTPUT} ${NZ_SRC})
